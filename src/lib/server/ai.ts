@@ -19,24 +19,33 @@ export interface Engine {
 }
 
 /**
- * The AI path is used when an AI Gateway key or a pulled OIDC token is configured
- * locally, or when running on Vercel (where the Gateway uses the deployment's OIDC token).
- * QUOTATION_AI_MODE=offline forces the rule-based matcher.
+ * Whether this deployment can use the AI path: an AI Gateway key or a pulled OIDC token
+ * locally, or running on Vercel (where the Gateway uses the deployment's OIDC token).
+ * QUOTATION_AI_MODE=offline turns AI off for everyone.
  */
-export function getEngine(): Engine {
-  const forcedOffline = process.env.QUOTATION_AI_MODE === "offline";
+export function aiAvailable(): boolean {
+  if (process.env.QUOTATION_AI_MODE === "offline") return false;
   // VERCEL_OIDC_TOKEN comes from `vercel env pull` for local development.
-  const canAuth =
-    Boolean(process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN) || process.env.VERCEL === "1";
-  if (forcedOffline || !canAuth) {
+  return Boolean(process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN) || process.env.VERCEL === "1";
+}
+
+export function configuredModel(): string {
+  return process.env.QUOTATION_MODEL || DEFAULT_MODEL;
+}
+
+/** Picks the engine for one request; the user may always opt out of AI, never into an unavailable one. */
+export function getEngine(requested: EngineMode = "ai"): Engine {
+  if (requested === "offline" || !aiAvailable()) {
     return { mode: "offline", model: null, extractor: heuristicExtractor, selector: heuristicSelector };
   }
-  const model = process.env.QUOTATION_MODEL || DEFAULT_MODEL;
+  const model = configuredModel();
   return { mode: "ai", model, extractor: createLlmExtractor(model), selector: createLlmSelector(model) };
 }
 
 export const OFFLINE_FALLBACK_WARNING =
   "เรียกโมเดล AI ไม่สำเร็จ ระบบใช้การจับคู่แบบออฟไลน์แทน กรุณาตรวจผลอย่างละเอียด / AI call failed; offline matching was used instead.";
+
+export const modeSchema = z.enum(["ai", "offline"]).optional();
 
 /** Parses a JSON body against a schema, returning a 400 response on failure. */
 export async function readJson<T>(req: Request, schema: z.ZodType<T>): Promise<{ data: T } | { response: Response }> {

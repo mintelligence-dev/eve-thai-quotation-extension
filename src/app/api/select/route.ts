@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { heuristicSelector } from "@/lib/quotation";
-import { getEngine, OFFLINE_FALLBACK_WARNING, readJson } from "@/lib/server/ai";
+import { getEngine, modeSchema, OFFLINE_FALLBACK_WARNING, readJson } from "@/lib/server/ai";
 
 const bodySchema = z.object({
   requests: z
@@ -28,6 +28,7 @@ const bodySchema = z.object({
       }),
     )
     .max(100),
+  mode: modeSchema,
 });
 
 /** Shortlisted requests → selections. The browser keeps the catalog; only shortlists arrive here. */
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
   if ("response" in parsed) return parsed.response;
 
   const { requests } = parsed.data;
-  const engine = getEngine();
+  const engine = getEngine(parsed.data.mode);
   try {
     const selections = await engine.selector.select(requests);
     return Response.json({ mode: engine.mode, model: engine.model, selections });

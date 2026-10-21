@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   acknowledgeUnit,
   addLine,
@@ -25,6 +25,8 @@ import {
   type RequestedLine,
   type Selection,
 } from "@/lib/quotation";
+import { CheckIcon } from "./icons";
+import { ModeSwitch, type Availability, type MatchMode } from "./mode-switch";
 import { QuotationDocument, type QuotationMeta } from "./quotation-document";
 import { CatalogSearch, ReviewTable } from "./review-table";
 
@@ -42,6 +44,8 @@ const SAMPLE_INQUIRIES: { file: string; label: string; catalog: SampleCatalog }[
   { file: "05-unit-mismatch.txt", label: "หน่วยไม่ตรง", catalog: "construction-th" },
   { file: "04-english-office.txt", label: "English email", catalog: "office-en" },
 ];
+
+const MODE_KEY = "tqc:match-mode";
 
 interface EngineInfo {
   mode: "ai" | "offline";
@@ -90,6 +94,35 @@ export function QuotationApp() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [engine, setEngine] = useState<EngineInfo | null>(null);
+  const [mode, setMode] = useState<MatchMode>("ai");
+  const [availability, setAvailability] = useState<Availability | null>(null);
+
+  // Ask the server whether AI can be used here; restore the viewer's last choice.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/engine")
+      .then((r) => r.json() as Promise<Availability>)
+      .then((a) => {
+        if (cancelled) return;
+        setAvailability(a);
+        let saved: string | null = null;
+        try {
+          saved = localStorage.getItem(MODE_KEY);
+        } catch {}
+        setMode(!a.aiAvailable || saved === "offline" ? "offline" : "ai");
+      })
+      .catch(() => !cancelled && setAvailability({ aiAvailable: false, model: null }));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const changeMode = (next: MatchMode) => {
+    setMode(next);
+    try {
+      localStorage.setItem(MODE_KEY, next);
+    } catch {}
+  };
 
   const [draft, setDraft] = useState<QuotationDraft | null>(null);
   const [settings, setSettings] = useState<QuotationSettings>({ vatRateBps: 700, pricesIncludeVat: false });
@@ -163,11 +196,11 @@ export function QuotationApp() {
     setError(null);
     try {
       // 1) Extraction sees only the inquiry text.
-      const extracted = await postJson<EngineInfo & { lines: RequestedLine[] }>("/api/extract", { inquiry });
+      const extracted = await postJson<EngineInfo & { lines: RequestedLine[] }>("/api/extract", { inquiry, mode });
       // 2) The catalog never leaves the browser: shortlist locally…
       const requests = shortlist(extracted.lines, catalog);
       // 3) …and send only names/units of the shortlisted items (no prices) for selection.
-      const selected = await postJson<EngineInfo & { selections: Selection[] }>("/api/select", { requests });
+      const selected = await postJson<EngineInfo & { selections: Selection[] }>("/api/select", { requests, mode });
       updateDraft(assembleDraft(requests, selected.selections, catalog));
       setEngine({
         mode: extracted.mode === "ai" && selected.mode === "ai" ? "ai" : "offline",
@@ -228,32 +261,30 @@ export function QuotationApp() {
               แปะข้อความลูกค้า แล้วได้ร่างใบเสนอราคาจากแคตตาล็อกและราคาจริงของคุณ · ราคาทุกบรรทัดมาจากแคตตาล็อกเท่านั้น
             </p>
           </div>
-          {engine && (
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ${
-                engine.mode === "ai" ? "bg-cyan-50 text-cyan-900 ring-cyan-200" : "bg-slate-100 text-slate-700 ring-slate-300"
-              }`}
-              title={engine.mode === "offline" ? "ตั้งค่า AI_GATEWAY_API_KEY เพื่อเปิดใช้ AI" : undefined}
-            >
-              {engine.mode === "ai" ? `AI: ${engine.model}` : "โหมดออฟไลน์ (จับคู่ด้วยกฎ ไม่ใช้ AI)"}
-            </span>
-          )}
+          <ModeSwitch value={mode} onChange={changeMode} availability={availability} />
         </header>
 
         <Step
           n={1}
           title="แคตตาล็อกสินค้าและราคา (CSV)"
-          aside={catalog && <span className="text-sm text-emerald-700">✓ {catalogLabel} · {catalog.length.toLocaleString("th-TH")} รายการ</span>}
+          aside={
+            catalog && (
+              <span className="flex items-center gap-1.5 text-sm text-emerald-800">
+                <CheckIcon />
+                {catalogLabel} · {catalog.length.toLocaleString("th-TH")} รายการ
+              </span>
+            )
+          }
         >
           <div className="space-y-3 px-5 py-4 text-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <label className="cursor-pointer rounded-md bg-navy px-3 py-1.5 font-medium text-white hover:bg-navy/90">
+              <label className="inline-flex min-h-10 cursor-pointer items-center rounded-md bg-navy px-3 font-medium text-white hover:bg-navy/90 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent sm:min-h-9">
                 อัปโหลด CSV
                 <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])} />
               </label>
               <span className="text-slate-500">หรือใช้ตัวอย่าง:</span>
               {(Object.keys(SAMPLE_CATALOGS) as SampleCatalog[]).map((name) => (
-                <button key={name} type="button" onClick={() => loadSampleCatalog(name)} className="rounded-md border border-slate-300 px-3 py-1.5 hover:bg-slate-50">
+                <button key={name} type="button" onClick={() => loadSampleCatalog(name)} className="min-h-10 rounded-md border border-slate-300 px-3 hover:bg-slate-50 sm:min-h-9">
                   {SAMPLE_CATALOGS[name]}
                 </button>
               ))}
@@ -295,7 +326,7 @@ export function QuotationApp() {
             <div className="flex flex-wrap gap-1.5 text-xs">
               <span className="py-1 text-slate-500">ตัวอย่าง:</span>
               {SAMPLE_INQUIRIES.map((s) => (
-                <button key={s.file} type="button" onClick={() => loadSampleInquiry(s)} className="rounded-full border border-slate-300 px-2.5 py-1 hover:bg-slate-50">
+                <button key={s.file} type="button" onClick={() => loadSampleInquiry(s)} className="min-h-10 rounded-full border border-slate-300 px-3 hover:bg-slate-50 sm:min-h-8">
                   {s.label}
                 </button>
               ))}
@@ -304,6 +335,7 @@ export function QuotationApp() {
               value={inquiry}
               onChange={(e) => setInquiry(e.target.value)}
               rows={7}
+              aria-label="ข้อความจากลูกค้า"
               placeholder={"เช่น\nขอราคาท่อฟ้า 4 หุน 50 เส้น ข้องอ 30 ตัว\nbreaker 20A 6 ตัว"}
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
@@ -317,7 +349,14 @@ export function QuotationApp() {
                 {busy ? "กำลังวิเคราะห์…" : "สร้างร่างใบเสนอราคา"}
               </button>
               {!catalog && <span className="text-sm text-slate-500">โหลดแคตตาล็อกก่อน</span>}
-              {error && <span className="text-sm text-rose-700">{error}</span>}
+              <span role="status" aria-live="polite" className="text-sm text-slate-600">
+                {busy ? "กำลังวิเคราะห์ข้อความ…" : draft ? `สร้างร่างแล้ว ${draft.lines.length} บรรทัด` : ""}
+              </span>
+              {error && (
+                <span role="alert" className="text-sm text-rose-700">
+                  {error}
+                </span>
+              )}
             </div>
           </div>
         </Step>
@@ -326,7 +365,21 @@ export function QuotationApp() {
           <Step
             n={3}
             title="ตรวจและแก้ไขร่าง"
-            aside={<span className="text-xs text-slate-500">AI แนะนำได้ แต่คนเป็นผู้ตัดสินทุกบรรทัด</span>}
+            aside={
+              <span className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                {engine?.mode === "ai" ? `สร้างด้วย AI · ${engine.model}` : "สร้างด้วยโหมดไม่ใช้ AI"} · คนเป็นผู้ตัดสินทุกบรรทัด
+                {engine && engine.mode !== mode && (availability?.aiAvailable || mode === "offline") && (
+                  <button
+                    type="button"
+                    onClick={analyze}
+                    disabled={busy}
+                    className="min-h-8 rounded-md border border-accent/40 px-2.5 text-accent hover:bg-cyan-50 disabled:opacity-40"
+                  >
+                    สร้างใหม่ด้วย{mode === "ai" ? " AI" : "โหมดไม่ใช้ AI"}
+                  </button>
+                )}
+              </span>
+            }
           >
             {engine?.warning && <p className="border-b border-amber-100 bg-amber-50 px-5 py-2 text-sm text-amber-900">{engine.warning}</p>}
             <ReviewTable
@@ -342,7 +395,12 @@ export function QuotationApp() {
               <div className="space-y-4">
                 <div className="max-w-md">
                   <p className="mb-1 text-xs font-medium text-slate-600">เพิ่มรายการที่ลูกค้าไม่ได้พูดถึง (เช่น ค่าขนส่ง)</p>
-                  <CatalogSearch catalog={catalog} onPick={(item) => updateDraft(addLine(draft, item, 1))} placeholder="ค้นหาเพื่อเพิ่มบรรทัด…" />
+                  <CatalogSearch
+                    catalog={catalog}
+                    onPick={(item) => updateDraft(addLine(draft, item, 1))}
+                    placeholder="ค้นหาเพื่อเพิ่มบรรทัด…"
+                    label="เพิ่มรายการจากแคตตาล็อก"
+                  />
                 </div>
                 {questions.length > 0 && (
                   <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm">
@@ -355,7 +413,7 @@ export function QuotationApp() {
                           setCopied(true);
                           setTimeout(() => setCopied(false), 1500);
                         }}
-                        className="rounded border border-amber-300 bg-white px-2 py-0.5 text-xs text-amber-900 hover:bg-amber-100"
+                        className="min-h-9 rounded-md border border-amber-300 bg-white px-2.5 text-xs text-amber-900 hover:bg-amber-100 sm:min-h-7"
                       >
                         {copied ? "คัดลอกแล้ว" : "คัดลอกข้อความ"}
                       </button>
@@ -390,7 +448,7 @@ export function QuotationApp() {
                       step={0.01}
                       value={settings.vatRateBps / 100}
                       onChange={(e) => updateSettings({ ...settings, vatRateBps: Math.max(0, Math.round(Number(e.target.value) * 100)) })}
-                      className="num w-16 rounded border border-slate-300 px-1.5 py-0.5 text-right"
+                      className="num h-9 w-16 rounded-md border border-slate-300 px-2 text-right"
                     />
                     %
                   </label>
@@ -429,13 +487,13 @@ export function QuotationApp() {
                 ).map(([key, label]) => (
                   <label key={key} className="grid gap-0.5">
                     <span className="text-xs text-slate-600">{label}</span>
-                    <input value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} className="rounded border border-slate-300 px-2 py-1" />
+                    <input value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} className="h-10 rounded-md border border-slate-300 px-3" />
                   </label>
                 ))}
                 <div className="grid grid-cols-2 gap-2">
                   <label className="grid gap-0.5">
                     <span className="text-xs text-slate-600">วันที่</span>
-                    <input type="date" value={meta.date} onChange={(e) => setMeta({ ...meta, date: e.target.value })} className="rounded border border-slate-300 px-2 py-1" />
+                    <input type="date" value={meta.date} onChange={(e) => setMeta({ ...meta, date: e.target.value })} className="h-10 rounded-md border border-slate-300 px-3" />
                   </label>
                   <label className="grid gap-0.5">
                     <span className="text-xs text-slate-600">ยืนราคา (วัน)</span>
@@ -444,7 +502,7 @@ export function QuotationApp() {
                       min={1}
                       value={meta.validDays}
                       onChange={(e) => setMeta({ ...meta, validDays: Math.max(1, Number(e.target.value) || 1) })}
-                      className="num rounded border border-slate-300 px-2 py-1"
+                      className="num h-10 rounded-md border border-slate-300 px-3"
                     />
                   </label>
                 </div>
@@ -459,7 +517,7 @@ export function QuotationApp() {
                 ).map(([key, label]) => (
                   <label key={key} className="grid gap-0.5">
                     <span className="text-xs text-slate-600">{label}</span>
-                    <textarea rows={2} value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} className="rounded border border-slate-300 px-2 py-1" />
+                    <textarea rows={2} value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} className="rounded-md border border-slate-300 px-3 py-2" />
                   </label>
                 ))}
               </div>
@@ -477,7 +535,10 @@ export function QuotationApp() {
                 </div>
               ) : approved ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="mr-2 font-medium text-emerald-700">✓ อนุมัติแล้ว ส่งออกได้</span>
+                  <span className="mr-2 flex items-center gap-1.5 font-medium text-emerald-800">
+                    <CheckIcon />
+                    อนุมัติแล้ว ส่งออกได้
+                  </span>
                   <button type="button" onClick={() => window.print()} className="rounded-md bg-navy px-4 py-2 font-semibold text-white hover:bg-navy/90">
                     พิมพ์ / บันทึกเป็น PDF
                   </button>

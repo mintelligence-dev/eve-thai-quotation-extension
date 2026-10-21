@@ -1,15 +1,15 @@
 import { z } from "zod";
 import { heuristicExtractor } from "@/lib/quotation";
-import { getEngine, OFFLINE_FALLBACK_WARNING, readJson } from "@/lib/server/ai";
+import { getEngine, modeSchema, OFFLINE_FALLBACK_WARNING, readJson } from "@/lib/server/ai";
 
-const bodySchema = z.object({ inquiry: z.string().trim().min(1).max(8_000) });
+const bodySchema = z.object({ inquiry: z.string().trim().min(1).max(8_000), mode: modeSchema });
 
 /** Inquiry text → requested lines. Receives no catalog data. Nothing is stored or logged. */
 export async function POST(req: Request) {
   const parsed = await readJson(req, bodySchema);
   if ("response" in parsed) return parsed.response;
 
-  const engine = getEngine();
+  const engine = getEngine(parsed.data.mode);
   try {
     const lines = await engine.extractor.extract(parsed.data.inquiry);
     return Response.json({ mode: engine.mode, model: engine.model, lines });
