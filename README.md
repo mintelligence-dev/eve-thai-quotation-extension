@@ -45,6 +45,8 @@ npm run dev                  # http://localhost:3000
 
 ถ้าเรียกโมเดลไม่สำเร็จ ระบบจะใช้โหมดออฟไลน์แทนและแสดงคำเตือนบนหน้าจอ
 
+**ปุ่มสลับโหมด (มุมขวาบน):** ผู้ใช้เลือก "ใช้ AI" หรือ "ไม่ใช้ AI" ได้ทุกครั้ง ส่วนหัวของร่างบอกว่าร่างนี้สร้างด้วยโหมดไหน และสร้างใหม่ด้วยอีกโหมดได้ ถ้าเซิร์ฟเวอร์ไม่มี AI ปุ่ม "ใช้ AI" จะกดไม่ได้ (หน้าเว็บถาม `GET /api/engine`) · ถ้าตั้ง `QUOTATION_AI_MODE=offline` จะปิด AI สำหรับทุกคน
+
 ### รูปแบบไฟล์ CSV
 
 | คอลัมน์ | จำเป็น | ตัวอย่าง |
@@ -166,6 +168,8 @@ npm run dev                  # http://localhost:3000
 
 If a model call fails, the app falls back to offline matching and shows a warning on screen.
 
+**Mode switch (top right):** each user can choose "AI" or "no AI" per draft. The draft header shows which mode built it and offers a rebuild in the other mode. The AI option is disabled when the server has no AI access (`GET /api/engine`), and `QUOTATION_AI_MODE=offline` turns AI off for everyone.
+
 ### CSV format
 
 See the Thai table above. The required columns are `sku, name, unit, unit_price`. The optional columns are `name_en`, `aliases` (separated by `|`) and `category`. Thai headers are accepted, and the file must be UTF-8. Good `aliases` are the single biggest accuracy lever.
@@ -197,6 +201,7 @@ src/lib/quotation/      core module (CSV, matching, pipeline, review, money) + t
 src/lib/server/ai.ts    picks AI vs offline engine
 src/app/api/extract     inquiry → requested lines
 src/app/api/select      shortlists → item selections (no prices)
+src/app/api/engine      whether AI is available here (drives the mode switch)
 src/components/         review screen and printable quotation template
 public/samples/         synthetic catalogs and inquiries
 ```

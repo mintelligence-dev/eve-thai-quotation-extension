@@ -28,6 +28,17 @@ body {
   white-space: nowrap;
 }
 
+/* Quantity fields: the stepper arrows eat the little width a number needs. */
+.no-spin {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.no-spin::-webkit-inner-spin-button,
+.no-spin::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .print-only {
   display: none;
 }

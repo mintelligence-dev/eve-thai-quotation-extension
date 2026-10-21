@@ -38,7 +38,8 @@ export function createLlmExtractor(model: LanguageModel): LineExtractor {
         output: Output.object({ schema: extractionSchema, name: "requested_lines" }),
       });
       return output.lines
-        .map((l) => ({ ...l, itemQuery: l.itemQuery.trim() }))
+        // Models echo list markers ("1. ", "- "); drop them so both modes show the same request text.
+        .map((l) => ({ ...l, text: l.text.replace(/^\s*(?:\d{1,3}[.)]|[-•*–])\s+/, "").trim(), itemQuery: l.itemQuery.trim() }))
         .filter((l) => l.itemQuery.length > 0);
     },
   };

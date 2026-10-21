@@ -296,7 +296,7 @@ function QuantityInput({ line, index, onQuantity }: { line: DraftLine; index: nu
       inputMode="decimal"
       value={line.quantity ?? ""}
       onChange={(e) => onQuantity(line.id, e.target.value === "" ? null : Number(e.target.value))}
-      className={`${inputBase} num h-10 w-full px-3 text-right ${
+      className={`${inputBase} num no-spin h-10 w-full px-3 text-right ${
         line.quantity ? "border-slate-300" : "border-amber-400 bg-amber-50/40"
       }`}
       aria-label={`จำนวน บรรทัด ${index + 1}`}
@@ -324,7 +324,7 @@ function UnitConfirm({ line, item, onAcknowledgeUnit }: { line: DraftLine; item?
     <button
       type="button"
       onClick={() => onAcknowledgeUnit(line.id)}
-      className="mt-2 min-h-10 rounded-md border border-amber-300 bg-amber-50 px-3 text-xs text-amber-900 hover:bg-amber-100 md:min-h-8"
+      className="mt-2 min-h-10 rounded-md border border-amber-300 bg-amber-50 px-3 text-xs text-amber-900 hover:bg-amber-100 lg:min-h-8"
     >
       ยืนยันจำนวนในหน่วย &quot;{item?.unit}&quot; แล้ว
     </button>
@@ -332,8 +332,8 @@ function UnitConfirm({ line, item, onAcknowledgeUnit }: { line: DraftLine; item?
 }
 
 /**
- * Review grid: a table from md up; stacked cards on phones so item, quantity and
- * money stay visible without sideways scrolling.
+ * Review grid: a fixed-layout table from lg up; stacked cards below that (phones and
+ * tablets) so item, quantity and money stay visible without sideways scrolling.
  */
 export function ReviewTable({ lines, lineTotals, catalog, onChoose, onQuantity, onAcknowledgeUnit, onRemove }: Props) {
   const bySku = useMemo(() => new Map(catalog.map((i) => [i.sku, i])), [catalog]);
@@ -366,7 +366,7 @@ export function ReviewTable({ lines, lineTotals, catalog, onChoose, onQuantity, 
 
   return (
     <>
-      <ul className="divide-y divide-slate-100 md:hidden">
+      <ul className="divide-y divide-slate-100 lg:hidden">
         {rows.map(({ line, i, item, unit, price, total, picker }) => (
           <li key={line.id} className="space-y-3 px-4 py-4">
             <div className="flex items-start gap-3">
@@ -398,18 +398,19 @@ export function ReviewTable({ lines, lineTotals, catalog, onChoose, onQuantity, 
       </ul>
 
       {/* `relative` so absolutely positioned descendants (sr-only labels) are clipped by the scroller. */}
-      <div className="relative hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[860px] text-sm">
-          <thead className="bg-slate-50 text-left text-xs font-semibold text-slate-600">
+      <div className="relative hidden overflow-x-auto lg:block">
+        {/* Fixed layout: column widths are honoured, so the quantity field can never be squeezed shut. */}
+        <table className="w-full table-fixed text-sm">
+          <thead className="bg-slate-50 text-left text-xs font-semibold whitespace-nowrap text-slate-600">
             <tr>
-              <th className="w-8 px-3 py-2">#</th>
-              <th className="w-[26%] px-3 py-2">ลูกค้าขอ</th>
+              <th className="w-10 px-3 py-2">#</th>
+              <th className="w-[22%] px-3 py-2">ลูกค้าขอ</th>
               <th className="px-3 py-2">สินค้าในแคตตาล็อก</th>
               <th className="w-24 px-3 py-2 text-right">จำนวน</th>
-              <th className="w-16 px-3 py-2">หน่วย</th>
+              <th className="w-20 px-3 py-2">หน่วย</th>
               <th className="w-24 px-3 py-2 text-right">ราคา/หน่วย</th>
               <th className="w-28 px-3 py-2 text-right">รวม</th>
-              <th className="w-12 px-2 py-2">
+              <th className="w-14 px-2 py-2">
                 <span className="sr-only">ลบ</span>
               </th>
             </tr>
