@@ -19,6 +19,7 @@ const bodySchema = z.object({
               sku: z.string().max(100),
               name: z.string().max(300),
               nameEn: z.string().max(300).optional(),
+              aliases: z.array(z.string().max(200)).max(30).optional(),
               unit: z.string().max(50),
               score: z.number(),
             }),

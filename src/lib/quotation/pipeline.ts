@@ -58,7 +58,7 @@ export const heuristicSelector: MatchSelector = {
 };
 
 export function toCandidateView(item: CatalogItem, score: number): CandidateView {
-  return { sku: item.sku, name: item.name, nameEn: item.nameEn, unit: item.unit, score };
+  return { sku: item.sku, name: item.name, nameEn: item.nameEn, aliases: item.aliases, unit: item.unit, score };
 }
 
 /** Attaches a catalog shortlist to every requested line. */
@@ -119,6 +119,9 @@ export function assembleDraft(
       }
     } else {
       sku = null;
+      // "Not found" is factually wrong when the request equals a catalog name or alias;
+      // don't auto-match it either — let the reviewer decide.
+      if (status === "not_found" && candidates[0]?.score === 1) status = "ambiguous";
     }
 
     if (status === "ambiguous") issues.push({ kind: "ambiguous", question: sel.question });

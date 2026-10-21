@@ -96,6 +96,12 @@ describe("ambiguous matches", () => {
     expect(draft.lines[0].issues).toContainEqual({ kind: "rejected_sku", sku: "MADE-UP-999" });
   });
 
+  it("does not let a model call an exact catalog alias 'not found'", () => {
+    const requests = shortlist(extractRequestedLinesHeuristic("ค่าขนส่ง 1 เที่ยว"), construction);
+    const draft = assembleDraft(requests, [{ status: "not_found", sku: null, question: null }], construction);
+    expect(draft.lines[0]).toMatchObject({ status: "ambiguous", sku: null });
+  });
+
   it("rejects a real catalog SKU that was not shortlisted for that line", () => {
     const requests = shortlist(extractRequestedLinesHeuristic("ท่อฟ้า 4 หุน 10 เส้น"), construction);
     const draft = assembleDraft(requests, [{ status: "matched", sku: "DLV-BKK", question: null }], construction);
@@ -170,7 +176,9 @@ describe("model-backed extractor and selector (mocked)", () => {
   });
 
   it("never sends prices or the full catalog to the model", async () => {
-    const { model, prompts } = mockModel({ decisions: [{ index: 0, status: "matched", sku: "PVC-050-85", question: null }] });
+    const { model, prompts } = mockModel({
+      decisions: [{ ref: "L1", request: "ท่อฟ้า 4 หุน", status: "matched", sku: "PVC-050-85", question: null }],
+    });
     const requests = shortlist(extractRequestedLinesHeuristic("ท่อฟ้า 4 หุน 50 เส้น"), construction, 3);
     await createLlmSelector(model).select(requests);
     const sent = JSON.stringify(prompts);
@@ -179,8 +187,25 @@ describe("model-backed extractor and selector (mocked)", () => {
     expect(sent).not.toContain("DLV-BKK"); // not on the shortlist
   });
 
+  it("pairs decisions with requests by echoed text when the model miscounts labels", async () => {
+    const { model } = mockModel({
+      decisions: [
+        { ref: "L1", request: "breaker 20a", status: "matched", sku: "MCB-1P20", question: null },
+        { ref: "L1", request: "ท่อฟ้า 4 หุน", status: "matched", sku: "PVC-050-85", question: null },
+      ],
+    });
+    const draft = await buildDraft({
+      inquiry: "ท่อฟ้า 4 หุน 50 เส้น\nbreaker 20A 6 ตัว",
+      catalog: construction,
+      selector: createLlmSelector(model),
+    });
+    expect(draft.lines.map((l) => l.sku)).toEqual(["PVC-050-85", "MCB-1P20"]);
+  });
+
   it("downgrades a hallucinated SKU from the model to ambiguous", async () => {
-    const { model } = mockModel({ decisions: [{ index: 0, status: "matched", sku: "PVC-999-XX", question: null }] });
+    const { model } = mockModel({
+      decisions: [{ ref: "L1", request: "ท่อฟ้า 4 หุน", status: "matched", sku: "PVC-999-XX", question: null }],
+    });
     const draft = await buildDraft({
       inquiry: "ท่อฟ้า 4 หุน 50 เส้น",
       catalog: construction,

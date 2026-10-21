@@ -19,13 +19,15 @@ export interface Engine {
 }
 
 /**
- * The AI path is used when an AI Gateway key is configured locally, or when running
- * on Vercel (where the Gateway authenticates with the deployment's OIDC token).
+ * The AI path is used when an AI Gateway key or a pulled OIDC token is configured
+ * locally, or when running on Vercel (where the Gateway uses the deployment's OIDC token).
  * QUOTATION_AI_MODE=offline forces the rule-based matcher.
  */
 export function getEngine(): Engine {
   const forcedOffline = process.env.QUOTATION_AI_MODE === "offline";
-  const canAuth = Boolean(process.env.AI_GATEWAY_API_KEY) || process.env.VERCEL === "1";
+  // VERCEL_OIDC_TOKEN comes from `vercel env pull` for local development.
+  const canAuth =
+    Boolean(process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN) || process.env.VERCEL === "1";
   if (forcedOffline || !canAuth) {
     return { mode: "offline", model: null, extractor: heuristicExtractor, selector: heuristicSelector };
   }

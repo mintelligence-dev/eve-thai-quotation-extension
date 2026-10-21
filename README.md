@@ -40,6 +40,7 @@ npm run dev                  # http://localhost:3000
 
 - **ไม่มีคีย์:** ระบบทำงานแบบ**ออฟไลน์** จับคู่ด้วยกฎ (ตัดคำไทยด้วย `Intl.Segmenter`, fuzzy match, ชื่อเรียกอื่น) ใช้เดโมได้ทันทีโดยไม่มีค่าใช้จ่าย
 - **มีคีย์ AI Gateway:** ระบบใช้ AI แยกรายการและเลือกสินค้า ซึ่งแม่นกว่าเมื่อลูกค้าพิมพ์ไม่เป็นรูปแบบ
+- **โปรเจกต์ที่ link กับ Vercel แล้ว:** รัน `vercel env pull .env.local` เพื่อดึง `VERCEL_OIDC_TOKEN` มาใช้ได้เลย ไม่ต้องสร้างคีย์ (token มีอายุจำกัด ถ้าหมดอายุให้ pull ใหม่)
 - **Deploy บน Vercel:** ไม่ต้องตั้งคีย์ เพราะ AI Gateway ยืนยันตัวตนด้วย OIDC ของ deployment ให้เอง (ต้องเปิดใช้ AI Gateway ในทีมก่อน)
 
 ถ้าเรียกโมเดลไม่สำเร็จ ระบบจะใช้โหมดออฟไลน์แทนและแสดงคำเตือนบนหน้าจอ
@@ -160,6 +161,7 @@ npm run dev                  # http://localhost:3000
 
 - **No key:** the app runs in **offline mode**, using rule-based matching (Thai word segmentation via `Intl.Segmenter`, fuzzy matching and aliases). The demo works immediately at no cost.
 - **With an AI Gateway key:** extraction and item selection use the model, which copes better with messy inquiries.
+- **Linked to a Vercel project:** run `vercel env pull .env.local` to get a short-lived `VERCEL_OIDC_TOKEN` instead of creating a key; pull again when it expires.
 - **On Vercel:** no key is needed, because the Gateway authenticates with the deployment's OIDC token. AI Gateway must be enabled for the team.
 
 If a model call fails, the app falls back to offline matching and shows a warning on screen.

@@ -57,6 +57,7 @@ export interface CandidateView {
   sku: string;
   name: string;
   nameEn?: string;
+  aliases?: string[];
   unit: string;
   score: number;
 }

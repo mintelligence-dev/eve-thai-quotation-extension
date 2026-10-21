@@ -1,5 +1,6 @@
 import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "zod";
+import { compact } from "./text";
 import type { LineExtractor, MatchSelector } from "./pipeline";
 import type { MatchRequest, RequestedLine, Selection } from "./types";
 
@@ -33,6 +34,7 @@ export function createLlmExtractor(model: LanguageModel): LineExtractor {
         model,
         system: EXTRACT_SYSTEM,
         prompt: inquiry,
+        temperature: 0,
         output: Output.object({ schema: extractionSchema, name: "requested_lines" }),
       });
       return output.lines
@@ -45,7 +47,8 @@ export function createLlmExtractor(model: LanguageModel): LineExtractor {
 const selectionSchema = z.object({
   decisions: z.array(
     z.object({
-      index: z.number().int().describe("Index of the request this decision is for."),
+      ref: z.string().describe('The request label exactly as given, e.g. "L3".'),
+      request: z.string().describe("The request text exactly as given, copied verbatim."),
       status: z.enum(["matched", "ambiguous", "not_found"]),
       sku: z.string().nullable().describe("A SKU copied exactly from this request's candidates when matched, else null."),
       question: z
@@ -57,9 +60,12 @@ const selectionSchema = z.object({
 });
 
 const SELECT_SYSTEM = `You match customer requests to items from a company catalog.
-For each request you are given a numbered shortlist of candidate catalog items (SKU, name, unit).
+For each request (labelled L1, L2, …) you are given a shortlist of candidate catalog items (SKU, name, aliases, unit).
+Return exactly one decision per request, echoing its label and request text.
 Rules:
 - "matched": exactly one candidate clearly is what the customer asked for. Return its SKU copied exactly.
+  Aliases are names the company itself uses for that item; a request that equals a name or alias is a match.
+  A different unit (e.g. gallon vs pail) is NOT a reason to reject: match the item, a person confirms units later.
 - "ambiguous": more than one candidate could fit (e.g. size, brand or model not specified). Ask which one.
 - "not_found": no candidate fits. Ask for the detail you would need.
 - Only ever return SKUs from that request's own candidate list. Never invent a SKU.
@@ -71,11 +77,16 @@ function describeRequests(requests: MatchRequest[]): string {
     .map(({ line, candidates }, i) => {
       const list = candidates.length
         ? candidates
-            .map((c) => `   - ${c.sku} | ${c.name}${c.nameEn ? ` (${c.nameEn})` : ""} | unit: ${c.unit}`)
+            .map(
+              (c) =>
+                `   - ${c.sku} | ${c.name}${c.nameEn ? ` (${c.nameEn})` : ""}${
+                  c.aliases?.length ? ` | aliases: ${c.aliases.join(", ")}` : ""
+                } | unit: ${c.unit}`,
+            )
             .join("\n")
         : "   (no candidates)";
       const qty = line.quantity === null ? "not stated" : `${line.quantity} ${line.unit ?? ""}`.trim();
-      return `[${i}] request: "${line.itemQuery}" (original: "${line.text}", quantity: ${qty})\n   candidates:\n${list}`;
+      return `L${i + 1} request: "${line.itemQuery}" (original: "${line.text}", quantity: ${qty})\n   candidates:\n${list}`;
     })
     .join("\n\n");
 }
@@ -89,11 +100,16 @@ export function createLlmSelector(model: LanguageModel): MatchSelector {
         model,
         system: SELECT_SYSTEM,
         prompt: describeRequests(requests),
+        temperature: 0,
         output: Output.object({ schema: selectionSchema, name: "match_decisions" }),
       });
-      const byIndex = new Map(output.decisions.map((d) => [d.index, d]));
-      return requests.map((_, i) => {
-        const d = byIndex.get(i);
+      // Models miscount positions, so a decision is tied to a request by its echoed text
+      // first and its label second. A wrong pairing is still caught by assembleDraft(),
+      // which rejects any SKU outside that line's shortlist.
+      const byText = new Map(output.decisions.map((d) => [compact(d.request), d]));
+      const byRef = new Map(output.decisions.map((d) => [d.ref.trim().toUpperCase(), d]));
+      return requests.map(({ line }, i) => {
+        const d = byText.get(compact(line.itemQuery)) ?? byRef.get(`L${i + 1}`);
         if (!d) return { status: "not_found", sku: null, question: null };
         return { status: d.status, sku: d.status === "matched" ? d.sku : null, question: d.question };
       });
