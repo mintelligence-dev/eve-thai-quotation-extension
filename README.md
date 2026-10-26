@@ -1,12 +1,18 @@
 # Thai Quotation Copilot
 
-[ภาษาไทย](#ภาษาไทย) · [English](#english)
+> AI ช่วยร่างใบเสนอราคาจากข้อความลูกค้า โดยใช้แคตตาล็อกและราคาของบริษัทเอง  
+> Turn Thai or English customer inquiries into quotation drafts from your own catalog.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmuisurasak%2Fthai-quotation-copilot&project-name=thai-quotation-copilot&repository-name=thai-quotation-copilot)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![AI SDK](https://img.shields.io/badge/AI%20SDK-7-black?logo=vercel)](https://ai-sdk.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+
+**Demo:** <https://thai-quotation-copilot.vercel.app> · [ภาษาไทย](#ภาษาไทย) · [English](#english)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmuisurasak%2Fthai-quotation-copilot&project-name=thai-quotation-copilot&repository-name=thai-quotation-copilot&env=AI_GATEWAY_API_KEY&envDescription=AI%20Gateway%20API%20key%3A%20Vercel%20dashboard%20%3E%20AI%20Gateway%20%3E%20API%20Keys%20%3E%20Create%20key&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fai-gateway%2Fauthentication)
 
 > The repository is private for now, so the Deploy button only works for accounts with access until it is made public.
-
-Open-source AI tool that turns Thai or English customer inquiries into quotation drafts using a company's **own** product and price catalog.
 
 ---
 
@@ -41,7 +47,7 @@ npm run dev                  # http://localhost:3000
 - **ไม่มีคีย์:** ระบบทำงานแบบ**ออฟไลน์** จับคู่ด้วยกฎ (ตัดคำไทยด้วย `Intl.Segmenter`, fuzzy match, ชื่อเรียกอื่น) ใช้เดโมได้ทันทีโดยไม่มีค่าใช้จ่าย
 - **มีคีย์ AI Gateway:** ระบบใช้ AI แยกรายการและเลือกสินค้า ซึ่งแม่นกว่าเมื่อลูกค้าพิมพ์ไม่เป็นรูปแบบ
 - **โปรเจกต์ที่ link กับ Vercel แล้ว:** รัน `vercel env pull .env.local` เพื่อดึง `VERCEL_OIDC_TOKEN` มาใช้ได้เลย ไม่ต้องสร้างคีย์ (token มีอายุจำกัด ถ้าหมดอายุให้ pull ใหม่)
-- **Deploy บน Vercel:** ไม่ต้องตั้งคีย์ เพราะ AI Gateway ยืนยันตัวตนด้วย OIDC ของ deployment ให้เอง (ต้องเปิดใช้ AI Gateway ในทีมก่อน)
+- **Deploy บน Vercel ด้วยปุ่ม Deploy:** หน้า clone จะขอให้กรอก `AI_GATEWAY_API_KEY` (สร้างได้ที่ Vercel dashboard → AI Gateway → API Keys) · ถ้า deploy เองด้วย CLI ไม่ต้องตั้งคีย์ เพราะ AI Gateway ยืนยันตัวตนด้วย OIDC ของ deployment ให้เอง (ต้องเปิดใช้ AI Gateway ในทีมก่อน)
 
 ถ้าเรียกโมเดลไม่สำเร็จ ระบบจะใช้โหมดออฟไลน์แทนและแสดงคำเตือนบนหน้าจอ
 
@@ -131,6 +137,15 @@ if (canApprove(draft, catalog).ok) {
 - ยังไม่ส่งเอกสารให้ลูกค้าอัตโนมัติ และยังไม่เชื่อม CRM/ERP
 - โหมดออฟไลน์อาจตีความผิด ถ้าสเปกมีหน่วยและมีข้อความคั่นก่อนถึงจำนวน เช่น "ปูน 50 กก. ตราเพชรา 10 ถุง" ซึ่งโหมด AI จัดการได้ดีกว่า
 
+### ร่วมพัฒนา
+
+ยินดีรับ issue และ pull request ก่อนส่ง PR ให้รัน `npm test`, `npm run typecheck` และ `npm run lint` ให้ผ่าน ถ้าเป็นการเปลี่ยนแปลงใหญ่ ให้เปิด issue คุยกันก่อน
+
+### สัญญาอนุญาต
+
+เผยแพร่ภายใต้ [MIT License](LICENSE) © 2026 M Intelligence  
+นำไปใช้ แก้ไข และใช้เชิงพาณิชย์ได้ โดยต้องคงข้อความลิขสิทธิ์และสัญญาอนุญาตไว้ในสำเนาทุกชุด ซอฟต์แวร์นี้ให้ "ตามสภาพ" ไม่มีการรับประกันใดๆ
+
 ---
 
 ## English
@@ -164,7 +179,7 @@ npm run dev                  # http://localhost:3000
 - **No key:** the app runs in **offline mode**, using rule-based matching (Thai word segmentation via `Intl.Segmenter`, fuzzy matching and aliases). The demo works immediately at no cost.
 - **With an AI Gateway key:** extraction and item selection use the model, which copes better with messy inquiries.
 - **Linked to a Vercel project:** run `vercel env pull .env.local` to get a short-lived `VERCEL_OIDC_TOKEN` instead of creating a key; pull again when it expires.
-- **On Vercel:** no key is needed, because the Gateway authenticates with the deployment's OIDC token. AI Gateway must be enabled for the team.
+- **Deploy button:** the clone page asks for `AI_GATEWAY_API_KEY` (create one in the Vercel dashboard → AI Gateway → API Keys). When deploying another way, the key is optional because the Gateway authenticates with the deployment's OIDC token. AI Gateway must be enabled for the team.
 
 If a model call fails, the app falls back to offline matching and shows a warning on screen.
 
@@ -206,6 +221,14 @@ src/components/         review screen and printable quotation template
 public/samples/         synthetic catalogs and inquiries
 ```
 
+### Tech stack
+
+Next.js 16 (App Router) · React 19 · Vercel AI SDK 7 + AI Gateway · Zod 4 · Tailwind CSS 4 · Vitest
+
+### Contributing
+
+Issues and pull requests are welcome. Please make sure `npm test`, `npm run typecheck` and `npm run lint` pass before opening a PR, and open an issue first for larger changes.
+
 ## License
 
-[MIT](LICENSE)
+Released under the [MIT License](LICENSE). Copyright © 2026 M Intelligence.
