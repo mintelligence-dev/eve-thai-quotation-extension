@@ -57,20 +57,32 @@ export const heuristicSelector: MatchSelector = {
   },
 };
 
+/** Size caps for what the browser sends to /api/select; the route schema enforces the same numbers. */
+export const SELECT_LIMITS = { lines: 60, candidates: 8, aliases: 10, aliasLength: 100, nameLength: 200 } as const;
+
+/** Shortlist view of a catalog item, trimmed to SELECT_LIMITS so large catalogs still pass the API. */
 export function toCandidateView(item: CatalogItem, score: number): CandidateView {
-  return { sku: item.sku, name: item.name, nameEn: item.nameEn, aliases: item.aliases, unit: item.unit, score };
+  const { aliases, aliasLength, nameLength } = SELECT_LIMITS;
+  return {
+    sku: item.sku,
+    name: item.name.slice(0, nameLength),
+    nameEn: item.nameEn?.slice(0, nameLength),
+    aliases: item.aliases.slice(0, aliases).map((a) => a.slice(0, aliasLength)),
+    unit: item.unit,
+    score,
+  };
 }
 
 /** Attaches a catalog shortlist to every requested line. */
 export function shortlist(
   lines: RequestedLine[],
   catalog: CatalogItem[],
-  limit = 8,
+  limit: number = SELECT_LIMITS.candidates,
 ): MatchRequest[] {
   const bySku = new Map(catalog.map((i) => [i.sku, i]));
   return lines.map((line) => ({
     line,
-    candidates: findCandidates(line.itemQuery, catalog, { limit }).map((c) =>
+    candidates: findCandidates(line.itemQuery, catalog, { limit: Math.min(limit, SELECT_LIMITS.candidates) }).map((c) =>
       toCandidateView(bySku.get(c.sku)!, c.score),
     ),
   }));

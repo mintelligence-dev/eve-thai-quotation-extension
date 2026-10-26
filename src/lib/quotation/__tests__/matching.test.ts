@@ -7,7 +7,9 @@ import {
   customerQuestions,
   extractRequestedLinesHeuristic,
   findCandidates,
+  SELECT_LIMITS,
   shortlist,
+  toCandidateView,
 } from "../index";
 import { sampleCatalog, sampleInquiry } from "./fixtures";
 
@@ -212,5 +214,20 @@ describe("model-backed extractor and selector (mocked)", () => {
       selector: createLlmSelector(model),
     });
     expect(draft.lines[0]).toMatchObject({ status: "ambiguous", sku: null });
+  });
+});
+
+describe("select payload limits", () => {
+  it("caps shortlist size and trims oversized catalog fields", () => {
+    const requests = shortlist(extractRequestedLinesHeuristic("ท่อ 10 เส้น"), construction, 50);
+    expect(requests[0].candidates.length).toBeLessThanOrEqual(SELECT_LIMITS.candidates);
+
+    const view = toCandidateView(
+      { sku: "X", name: "ก".repeat(500), aliases: Array(40).fill("ข".repeat(300)), unit: "ชิ้น", unitPriceSatang: 100 },
+      1,
+    );
+    expect(view.name).toHaveLength(SELECT_LIMITS.nameLength);
+    expect(view.aliases).toHaveLength(SELECT_LIMITS.aliases);
+    expect(view.aliases?.[0]).toHaveLength(SELECT_LIMITS.aliasLength);
   });
 });

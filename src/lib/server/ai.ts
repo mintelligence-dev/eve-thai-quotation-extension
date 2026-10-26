@@ -47,11 +47,20 @@ export const OFFLINE_FALLBACK_WARNING =
 
 export const modeSchema = z.enum(["ai", "offline"]).optional();
 
-/** Parses a JSON body against a schema, returning a 400 response on failure. */
-export async function readJson<T>(req: Request, schema: z.ZodType<T>): Promise<{ data: T } | { response: Response }> {
+/** Parses a JSON body against a schema, returning 413 when it exceeds maxBytes and 400 on any other failure. */
+export async function readJson<T>(
+  req: Request,
+  schema: z.ZodType<T>,
+  maxBytes: number,
+): Promise<{ data: T } | { response: Response }> {
+  const tooLarge = () => ({ response: Response.json({ error: "Request body too large" }, { status: 413 }) });
+  if (Number(req.headers.get("content-length") ?? 0) > maxBytes) return tooLarge();
   let body: unknown;
   try {
-    body = await req.json();
+    // content-length can be absent or wrong, so check the bytes actually read too.
+    const raw = await req.arrayBuffer();
+    if (raw.byteLength > maxBytes) return tooLarge();
+    body = JSON.parse(new TextDecoder().decode(raw));
   } catch {
     return { response: Response.json({ error: "Invalid JSON body" }, { status: 400 }) };
   }

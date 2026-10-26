@@ -16,6 +16,7 @@ import {
   previewTotals,
   priceQuotation,
   removeLine,
+  SELECT_LIMITS,
   setQuantity,
   shortlist,
   type CatalogItem,
@@ -60,6 +61,7 @@ const todayIso = () => {
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  if (res.status === 429) throw new Error("ใช้งานถี่เกินไป กรุณารอสักครู่แล้วลองใหม่ / Too many requests, please wait a minute.");
   if (!res.ok) throw new Error(`${url} ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -199,6 +201,11 @@ export function QuotationApp() {
       const extracted = await postJson<EngineInfo & { lines: RequestedLine[] }>("/api/extract", { inquiry, mode });
       // 2) The catalog never leaves the browser: shortlist locally…
       const requests = shortlist(extracted.lines, catalog);
+      if (requests.length > SELECT_LIMITS.lines) {
+        throw new Error(
+          `ข้อความมี ${requests.length} รายการ เกินขีดจำกัด ${SELECT_LIMITS.lines} รายการต่อครั้ง กรุณาแบ่งส่ง / Too many items (limit ${SELECT_LIMITS.lines}).`,
+        );
+      }
       // 3) …and send only names/units of the shortlisted items (no prices) for selection.
       const selected = await postJson<EngineInfo & { selections: Selection[] }>("/api/select", { requests, mode });
       updateDraft(assembleDraft(requests, selected.selections, catalog));

@@ -6,7 +6,7 @@ const bodySchema = z.object({ inquiry: z.string().trim().min(1).max(8_000), mode
 
 /** Inquiry text → requested lines. Receives no catalog data. Nothing is stored or logged. */
 export async function POST(req: Request) {
-  const parsed = await readJson(req, bodySchema);
+  const parsed = await readJson(req, bodySchema, 64_000);
   if ("response" in parsed) return parsed.response;
 
   const engine = getEngine(parsed.data.mode);

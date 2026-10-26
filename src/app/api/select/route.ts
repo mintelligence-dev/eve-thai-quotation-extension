@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { heuristicSelector } from "@/lib/quotation";
+import { heuristicSelector, SELECT_LIMITS } from "@/lib/quotation";
 import { getEngine, modeSchema, OFFLINE_FALLBACK_WARNING, readJson } from "@/lib/server/ai";
 
 const bodySchema = z.object({
@@ -17,23 +17,26 @@ const bodySchema = z.object({
           .array(
             z.object({
               sku: z.string().max(100),
-              name: z.string().max(300),
-              nameEn: z.string().max(300).optional(),
-              aliases: z.array(z.string().max(200)).max(30).optional(),
+              name: z.string().max(SELECT_LIMITS.nameLength),
+              nameEn: z.string().max(SELECT_LIMITS.nameLength).optional(),
+              aliases: z.array(z.string().max(SELECT_LIMITS.aliasLength)).max(SELECT_LIMITS.aliases).optional(),
               unit: z.string().max(50),
               score: z.number(),
             }),
           )
-          .max(10),
+          .max(SELECT_LIMITS.candidates),
       }),
     )
-    .max(100),
+    .max(SELECT_LIMITS.lines),
   mode: modeSchema,
 });
 
+/** Well above a full 60-line Thai request (~2 KB per line), far below what the field caps alone would allow. */
+const MAX_BODY_BYTES = 200_000;
+
 /** Shortlisted requests → selections. The browser keeps the catalog; only shortlists arrive here. */
 export async function POST(req: Request) {
-  const parsed = await readJson(req, bodySchema);
+  const parsed = await readJson(req, bodySchema, MAX_BODY_BYTES);
   if ("response" in parsed) return parsed.response;
 
   const { requests } = parsed.data;
