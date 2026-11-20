@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { CheckIcon, MoonIcon, SunIcon, TriangleAlertIcon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { NumberInput } from "@/components/ui/number-input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   acknowledgeUnit,
   addLine,
@@ -26,7 +35,6 @@ import {
   type RequestedLine,
   type Selection,
 } from "@/lib/quotation";
-import { CheckIcon } from "./icons";
 import { ModeSwitch, type Availability, type MatchMode } from "./mode-switch";
 import { QuotationDocument, type QuotationMeta } from "./quotation-document";
 import { CatalogSearch, ReviewTable } from "./review-table";
@@ -47,6 +55,7 @@ const SAMPLE_INQUIRIES: { file: string; label: string; catalog: SampleCatalog }[
 ];
 
 const MODE_KEY = "tqc:match-mode";
+const THEME_KEY = "tqc:theme";
 
 interface EngineInfo {
   mode: "ai" | "offline";
@@ -54,10 +63,16 @@ interface EngineInfo {
   warning?: string;
 }
 
-const todayIso = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
+function subscribeToHtmlClass(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
+}
+const isDark = () => document.documentElement.classList.contains("dark");
+
+const toIso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const todayIso = () => toIso(new Date());
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -73,10 +88,10 @@ function csvEscape(value: string | number): string {
 
 function Step({ n, title, children, aside }: { n: number; title: string; children: React.ReactNode; aside?: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3">
-        <h2 className="flex items-center gap-2.5 font-semibold text-navy">
-          <span className="flex size-6 items-center justify-center rounded-full bg-navy text-xs text-white">{n}</span>
+    <section className="rounded-xl border bg-card text-card-foreground shadow-sm">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-3">
+        <h2 className="flex items-center gap-2.5 font-heading font-semibold">
+          <span className="flex size-6 items-center justify-center rounded-full bg-brand text-xs text-brand-foreground">{n}</span>
           {title}
         </h2>
         {aside}
@@ -118,6 +133,24 @@ export function QuotationApp() {
       cancelled = true;
     };
   }, []);
+
+  // Dark mode lives on <html class="dark">. The saved choice is applied after mount, and the button
+  // reads the class back, so the server and the first client render agree.
+  const dark = useSyncExternalStore(subscribeToHtmlClass, isDark, () => false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(THEME_KEY) === "dark") document.documentElement.classList.add("dark");
+    } catch {}
+  }, []);
+  const toggleDark = () => {
+    const next = !dark;
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem(THEME_KEY, next ? "dark" : "light");
+    } catch {}
+  };
+
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const changeMode = (next: MatchMode) => {
     setMode(next);
@@ -263,12 +296,17 @@ export function QuotationApp() {
       <div className="no-print mx-auto max-w-6xl space-y-5 px-4 py-6 sm:px-6">
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-navy">Thai Quotation Copilot</h1>
-            <p className="text-sm text-slate-600">
+            <h1 className="font-heading text-2xl font-bold">Thai Quotation Copilot</h1>
+            <p className="text-sm text-muted-foreground">
               แปะข้อความลูกค้า แล้วได้ร่างใบเสนอราคาจากแคตตาล็อกและราคาจริงของคุณ · ราคาทุกบรรทัดมาจากแคตตาล็อกเท่านั้น
             </p>
           </div>
-          <ModeSwitch value={mode} onChange={changeMode} availability={availability} />
+          <div className="flex items-start gap-2">
+            <ModeSwitch value={mode} onChange={changeMode} availability={availability} />
+            <Button type="button" variant="ghost" size="icon" onClick={toggleDark} aria-label={dark ? "ใช้โหมดสว่าง" : "ใช้โหมดมืด"}>
+              {dark ? <SunIcon /> : <MoonIcon />}
+            </Button>
+          </div>
         </header>
 
         <Step
@@ -276,8 +314,8 @@ export function QuotationApp() {
           title="แคตตาล็อกสินค้าและราคา (CSV)"
           aside={
             catalog && (
-              <span className="flex items-center gap-1.5 text-sm text-emerald-800">
-                <CheckIcon />
+              <span className="flex items-center gap-1.5 text-sm text-success">
+                <CheckIcon className="size-4" />
                 {catalogLabel} · {catalog.length.toLocaleString("th-TH")} รายการ
               </span>
             )
@@ -285,82 +323,96 @@ export function QuotationApp() {
         >
           <div className="space-y-3 px-5 py-4 text-sm">
             <div className="flex flex-wrap items-center gap-2">
-              <label className="inline-flex min-h-10 cursor-pointer items-center rounded-md bg-navy px-3 font-medium text-white hover:bg-navy/90 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent sm:min-h-9">
+              <Button type="button" onClick={() => fileRef.current?.click()}>
                 อัปโหลด CSV
-                <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])} />
-              </label>
-              <span className="text-slate-500">หรือใช้ตัวอย่าง:</span>
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,text/csv"
+                aria-label="ไฟล์แคตตาล็อก CSV"
+                tabIndex={-1}
+                className="sr-only"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) onUpload(e.target.files[0]);
+                  // Let the same file be chosen again after it was fixed.
+                  e.target.value = "";
+                }}
+              />
+              <span className="text-muted-foreground">หรือใช้ตัวอย่าง:</span>
               {(Object.keys(SAMPLE_CATALOGS) as SampleCatalog[]).map((name) => (
-                <button key={name} type="button" onClick={() => loadSampleCatalog(name)} className="min-h-10 rounded-md border border-slate-300 px-3 hover:bg-slate-50 sm:min-h-9">
+                <Button key={name} type="button" variant="outline" onClick={() => loadSampleCatalog(name)}>
                   {SAMPLE_CATALOGS[name]}
-                </button>
+                </Button>
               ))}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               คอลัมน์: <code>sku, name, unit, unit_price</code> (จำเป็น) · <code>name_en, aliases, category</code> (ไม่บังคับ) · คั่นชื่อเรียกอื่นด้วย <code>|</code> ·
               ไฟล์อยู่ในเบราว์เซอร์นี้เท่านั้น ไม่ถูกอัปโหลดหรือบันทึกที่เซิร์ฟเวอร์ ·{" "}
-              <a href="/samples/catalog-construction-th.csv" download className="text-accent hover:underline">
+              <a href="/samples/catalog-construction-th.csv" download className="text-primary underline underline-offset-4">
                 ดาวน์โหลดไฟล์ตัวอย่าง
               </a>
             </p>
             {importErrors.length > 0 && (
-              <div className="rounded-md border border-rose-200 bg-rose-50 p-3 text-rose-900" role="alert">
-                <p className="font-medium">นำเข้าไม่สำเร็จ แก้ไฟล์ตามนี้แล้วอัปโหลดใหม่ ({importErrors.length} จุด)</p>
-                <ul className="mt-1 max-h-48 space-y-0.5 overflow-auto text-xs">
-                  {importErrors.map((e, i) => (
-                    <li key={i}>
-                      {e.row > 0 && <b>แถว {e.row}{e.column ? ` · ${e.column}` : ""}: </b>}
-                      {e.message}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <Alert variant="destructive">
+                <TriangleAlertIcon />
+                <AlertTitle>นำเข้าไม่สำเร็จ แก้ไฟล์ตามนี้แล้วอัปโหลดใหม่ ({importErrors.length} จุด)</AlertTitle>
+                <AlertDescription>
+                  <ul className="max-h-48 w-full space-y-0.5 overflow-auto text-xs">
+                    {importErrors.map((e, i) => (
+                      <li key={i}>
+                        {e.row > 0 && <b>แถว {e.row}{e.column ? ` · ${e.column}` : ""}: </b>}
+                        {e.message}
+                      </li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
             )}
             {importWarnings.length > 0 && (
-              <ul className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-                {importWarnings.map((w, i) => (
-                  <li key={i}>
-                    แถว {w.row}: {w.message}
-                  </li>
-                ))}
-              </ul>
+              <Alert variant="warning" role="status">
+                <AlertDescription>
+                  <ul className="space-y-0.5 text-xs">
+                    {importWarnings.map((w, i) => (
+                      <li key={i}>
+                        แถว {w.row}: {w.message}
+                      </li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
             )}
           </div>
         </Step>
 
         <Step n={2} title="ข้อความจากลูกค้า (ไทย / English)">
           <div className="space-y-3 px-5 py-4">
-            <div className="flex flex-wrap gap-1.5 text-xs">
-              <span className="py-1 text-slate-500">ตัวอย่าง:</span>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-muted-foreground">ตัวอย่าง:</span>
               {SAMPLE_INQUIRIES.map((s) => (
-                <button key={s.file} type="button" onClick={() => loadSampleInquiry(s)} className="min-h-10 rounded-full border border-slate-300 px-3 hover:bg-slate-50 sm:min-h-8">
+                <Button key={s.file} type="button" variant="outline" size="sm" onClick={() => loadSampleInquiry(s)} className="rounded-full text-xs">
                   {s.label}
-                </button>
+                </Button>
               ))}
             </div>
-            <textarea
+            <Textarea
               value={inquiry}
               onChange={(e) => setInquiry(e.target.value)}
               rows={7}
               aria-label="ข้อความจากลูกค้า"
               placeholder={"เช่น\nขอราคาท่อฟ้า 4 หุน 50 เส้น ข้องอ 30 ตัว\nbreaker 20A 6 ตัว"}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+              className="leading-relaxed"
             />
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                disabled={!catalog || !inquiry.trim() || busy}
-                onClick={analyze}
-                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
-              >
+              <Button type="button" variant="brand" disabled={!catalog || !inquiry.trim() || busy} onClick={analyze}>
                 {busy ? "กำลังวิเคราะห์…" : "สร้างร่างใบเสนอราคา"}
-              </button>
-              {!catalog && <span className="text-sm text-slate-500">โหลดแคตตาล็อกก่อน</span>}
-              <span role="status" aria-live="polite" className="text-sm text-slate-600">
+              </Button>
+              {!catalog && <span className="text-sm text-muted-foreground">โหลดแคตตาล็อกก่อน</span>}
+              <span role="status" aria-live="polite" className="text-sm text-muted-foreground">
                 {busy ? "กำลังวิเคราะห์ข้อความ…" : draft ? `สร้างร่างแล้ว ${draft.lines.length} บรรทัด` : ""}
               </span>
               {error && (
-                <span role="alert" className="text-sm text-rose-700">
+                <span role="alert" className="text-sm text-destructive">
                   {error}
                 </span>
               )}
@@ -373,22 +425,17 @@ export function QuotationApp() {
             n={3}
             title="ตรวจและแก้ไขร่าง"
             aside={
-              <span className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+              <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 {engine?.mode === "ai" ? `สร้างด้วย AI · ${engine.model}` : "สร้างด้วยโหมดไม่ใช้ AI"} · คนเป็นผู้ตัดสินทุกบรรทัด
                 {engine && engine.mode !== mode && (availability?.aiAvailable || mode === "offline") && (
-                  <button
-                    type="button"
-                    onClick={analyze}
-                    disabled={busy}
-                    className="min-h-8 rounded-md border border-accent/40 px-2.5 text-accent hover:bg-cyan-50 disabled:opacity-40"
-                  >
+                  <Button type="button" variant="outline" size="sm" onClick={analyze} disabled={busy} className="text-xs text-primary">
                     สร้างใหม่ด้วย{mode === "ai" ? " AI" : "โหมดไม่ใช้ AI"}
-                  </button>
+                  </Button>
                 )}
               </span>
             }
           >
-            {engine?.warning && <p className="border-b border-amber-100 bg-amber-50 px-5 py-2 text-sm text-amber-900">{engine.warning}</p>}
+            {engine?.warning && <p className="border-b border-warning/20 bg-warning/8 px-5 py-2 text-sm text-warning">{engine.warning}</p>}
             <ReviewTable
               lines={draft.lines}
               lineTotals={totals.lineTotals}
@@ -398,10 +445,10 @@ export function QuotationApp() {
               onAcknowledgeUnit={(id) => updateDraft(acknowledgeUnit(draft, id))}
               onRemove={(id) => updateDraft(removeLine(draft, id))}
             />
-            <div className="grid gap-5 border-t border-slate-100 px-5 py-4 md:grid-cols-[1fr_auto]">
+            <div className="grid gap-5 border-t px-5 py-4 md:grid-cols-[1fr_auto]">
               <div className="space-y-4">
                 <div className="max-w-md">
-                  <p className="mb-1 text-xs font-medium text-slate-600">เพิ่มรายการที่ลูกค้าไม่ได้พูดถึง (เช่น ค่าขนส่ง)</p>
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">เพิ่มรายการที่ลูกค้าไม่ได้พูดถึง (เช่น ค่าขนส่ง)</p>
                   <CatalogSearch
                     catalog={catalog}
                     onPick={(item) => updateDraft(addLine(draft, item, 1))}
@@ -410,30 +457,34 @@ export function QuotationApp() {
                   />
                 </div>
                 {questions.length > 0 && (
-                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium text-amber-950">ต้องถามลูกค้าเพิ่ม ({questions.length})</p>
-                      <button
+                  <Alert variant="warning" role="group" aria-label="ต้องถามลูกค้าเพิ่ม">
+                    <div className="col-start-2 flex items-center justify-between gap-2">
+                      <AlertTitle>ต้องถามลูกค้าเพิ่ม ({questions.length})</AlertTitle>
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={async () => {
                           await navigator.clipboard.writeText(questions.map((q, i) => `${i + 1}. ${q}`).join("\n"));
                           setCopied(true);
                           setTimeout(() => setCopied(false), 1500);
                         }}
-                        className="min-h-9 rounded-md border border-amber-300 bg-white px-2.5 text-xs text-amber-900 hover:bg-amber-100 sm:min-h-7"
+                        className="border-warning/40 bg-card text-xs text-warning hover:bg-warning/10 hover:text-warning"
                       >
                         {copied ? "คัดลอกแล้ว" : "คัดลอกข้อความ"}
-                      </button>
+                      </Button>
                     </div>
-                    <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-amber-950">
-                      {questions.map((q) => (
-                        <li key={q}>{q}</li>
-                      ))}
-                    </ol>
-                  </div>
+                    <AlertDescription>
+                      <ol className="list-decimal space-y-0.5 pl-5">
+                        {questions.map((q) => (
+                          <li key={q}>{q}</li>
+                        ))}
+                      </ol>
+                    </AlertDescription>
+                  </Alert>
                 )}
                 {draft.ignored.length > 0 && (
-                  <details className="text-xs text-slate-600">
+                  <details className="text-xs text-muted-foreground">
                     <summary className="cursor-pointer">ข้อความที่ไม่ได้นำมาเป็นรายการสินค้า ({draft.ignored.length})</summary>
                     <ul className="mt-1 list-disc pl-5">
                       {draft.ignored.map((t, i) => (
@@ -446,35 +497,37 @@ export function QuotationApp() {
 
               <div className="min-w-72 space-y-3">
                 <div className="flex flex-wrap items-center gap-3 text-sm">
-                  <label className="flex items-center gap-1.5">
-                    VAT
-                    <input
-                      type="number"
+                  <div className="flex items-center gap-1.5">
+                    <Label htmlFor="vat-rate">VAT</Label>
+                    <NumberInput
+                      id="vat-rate"
+                      decimals={2}
                       min={0}
                       max={100}
-                      step={0.01}
+                      suffix="%"
                       value={settings.vatRateBps / 100}
-                      onChange={(e) => updateSettings({ ...settings, vatRateBps: Math.max(0, Math.round(Number(e.target.value) * 100)) })}
-                      className="num h-9 w-16 rounded-md border border-slate-300 px-2 text-right"
+                      onValueChange={(v) => updateSettings({ ...settings, vatRateBps: Math.round((v ?? 0) * 100) })}
+                      className="w-24 [&_input]:pr-8"
                     />
-                    %
-                  </label>
-                  <label className="flex items-center gap-1.5">
-                    <input
-                      type="checkbox"
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="prices-include-vat"
                       checked={settings.pricesIncludeVat}
-                      onChange={(e) => updateSettings({ ...settings, pricesIncludeVat: e.target.checked })}
+                      onCheckedChange={(v) => updateSettings({ ...settings, pricesIncludeVat: v === true })}
                     />
-                    ราคาในแคตตาล็อกรวม VAT แล้ว
-                  </label>
+                    <Label htmlFor="prices-include-vat" className="font-normal">
+                      ราคาในแคตตาล็อกรวม VAT แล้ว
+                    </Label>
+                  </div>
                 </div>
                 <dl className="grid grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-sm">
-                  <dt className="text-slate-600">มูลค่าก่อนภาษี</dt>
+                  <dt className="text-muted-foreground">มูลค่าก่อนภาษี</dt>
                   <dd className="num text-right">{formatAmount(totals.subtotalSatang)}</dd>
-                  <dt className="text-slate-600">VAT {formatVatRate(settings.vatRateBps)}</dt>
+                  <dt className="text-muted-foreground">VAT {formatVatRate(settings.vatRateBps)}</dt>
                   <dd className="num text-right">{formatAmount(totals.vatSatang)}</dd>
-                  <dt className="border-t border-slate-200 pt-1 font-semibold">รวมทั้งสิ้น</dt>
-                  <dd className="num border-t border-slate-200 pt-1 text-right text-lg font-bold text-navy">{formatTHB(totals.grandTotalSatang)}</dd>
+                  <dt className="border-t pt-1 font-semibold">รวมทั้งสิ้น</dt>
+                  <dd className="num border-t pt-1 text-right text-lg font-bold text-brand">{formatTHB(totals.grandTotalSatang)}</dd>
                 </dl>
               </div>
             </div>
@@ -492,26 +545,35 @@ export function QuotationApp() {
                     ["sellerName", "ชื่อบริษัทผู้ขาย"],
                   ] as const
                 ).map(([key, label]) => (
-                  <label key={key} className="grid gap-0.5">
-                    <span className="text-xs text-slate-600">{label}</span>
-                    <input value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} className="h-10 rounded-md border border-slate-300 px-3" />
-                  </label>
+                  <div key={key} className="grid gap-1">
+                    <Label htmlFor={`meta-${key}`} className="text-xs text-muted-foreground">
+                      {label}
+                    </Label>
+                    <Input id={`meta-${key}`} value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} />
+                  </div>
                 ))}
                 <div className="grid grid-cols-2 gap-2">
-                  <label className="grid gap-0.5">
-                    <span className="text-xs text-slate-600">วันที่</span>
-                    <input type="date" value={meta.date} onChange={(e) => setMeta({ ...meta, date: e.target.value })} className="h-10 rounded-md border border-slate-300 px-3" />
-                  </label>
-                  <label className="grid gap-0.5">
-                    <span className="text-xs text-slate-600">ยืนราคา (วัน)</span>
-                    <input
-                      type="number"
+                  <div className="grid gap-1">
+                    <Label id="meta-date-label" className="text-xs text-muted-foreground">
+                      วันที่
+                    </Label>
+                    <DatePicker
+                      aria-labelledby="meta-date-label"
+                      value={meta.date ? new Date(`${meta.date}T00:00:00`) : undefined}
+                      onValueChange={(d) => setMeta({ ...meta, date: d ? toIso(d) : "" })}
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label htmlFor="meta-valid-days" className="text-xs text-muted-foreground">
+                      ยืนราคา (วัน)
+                    </Label>
+                    <NumberInput
+                      id="meta-valid-days"
                       min={1}
                       value={meta.validDays}
-                      onChange={(e) => setMeta({ ...meta, validDays: Math.max(1, Number(e.target.value) || 1) })}
-                      className="num h-10 rounded-md border border-slate-300 px-3"
+                      onValueChange={(v) => setMeta({ ...meta, validDays: Math.max(1, v ?? 1) })}
                     />
-                  </label>
+                  </div>
                 </div>
               </div>
               <div className="grid gap-2">
@@ -522,55 +584,61 @@ export function QuotationApp() {
                     ["notes", "หมายเหตุ (เงื่อนไขชำระเงิน การส่งของ ฯลฯ)"],
                   ] as const
                 ).map(([key, label]) => (
-                  <label key={key} className="grid gap-0.5">
-                    <span className="text-xs text-slate-600">{label}</span>
-                    <textarea rows={2} value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} className="rounded-md border border-slate-300 px-3 py-2" />
-                  </label>
+                  <div key={key} className="grid gap-1">
+                    <Label htmlFor={`meta-${key}`} className="text-xs text-muted-foreground">
+                      {label}
+                    </Label>
+                    <Textarea id={`meta-${key}`} rows={2} value={meta[key]} onChange={(e) => setMeta({ ...meta, [key]: e.target.value })} />
+                  </div>
                 ))}
               </div>
             </div>
 
-            <div className="border-t border-slate-100 px-5 py-4 text-sm">
+            <div className="border-t px-5 py-4 text-sm">
               {!approval.ok ? (
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                  <p className="font-medium text-slate-800">ยังอนุมัติไม่ได้ แก้ให้ครบก่อน:</p>
-                  <ul className="mt-1 list-disc space-y-0.5 pl-5 text-slate-700">
-                    {approval.blockers.map((b) => (
-                      <li key={b}>{b}</li>
-                    ))}
-                  </ul>
-                </div>
+                <Alert role="status" className="bg-muted/50">
+                  <AlertTitle>ยังอนุมัติไม่ได้ แก้ให้ครบก่อน:</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc space-y-0.5 pl-5">
+                      {approval.blockers.map((b) => (
+                        <li key={b}>{b}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
               ) : approved ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="mr-2 flex items-center gap-1.5 font-medium text-emerald-800">
-                    <CheckIcon />
+                  <span className="mr-2 flex items-center gap-1.5 font-medium text-success">
+                    <CheckIcon className="size-4" />
                     อนุมัติแล้ว ส่งออกได้
                   </span>
-                  <button type="button" onClick={() => window.print()} className="rounded-md bg-navy px-4 py-2 font-semibold text-white hover:bg-navy/90">
+                  <Button type="button" onClick={() => window.print()}>
                     พิมพ์ / บันทึกเป็น PDF
-                  </button>
-                  <button type="button" onClick={downloadCsv} className="rounded-md border border-slate-300 px-4 py-2 hover:bg-slate-50">
+                  </Button>
+                  <Button type="button" variant="outline" onClick={downloadCsv}>
                     ดาวน์โหลด CSV
-                  </button>
-                  <button type="button" onClick={revokeApproval} className="text-xs text-slate-500 hover:underline">
+                  </Button>
+                  <Button type="button" variant="link" size="sm" onClick={revokeApproval} className="text-xs text-muted-foreground">
                     ยกเลิกการอนุมัติ
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-3">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} />
-                    ฉันตรวจรายการ จำนวน และราคาทุกบรรทัดแล้ว
-                  </label>
-                  <button
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="reviewed" checked={reviewed} onCheckedChange={(v) => setReviewed(v === true)} />
+                    <Label htmlFor="reviewed" className="font-normal">
+                      ฉันตรวจรายการ จำนวน และราคาทุกบรรทัดแล้ว
+                    </Label>
+                  </div>
+                  <Button
                     type="button"
                     disabled={!reviewed}
                     onClick={() => setApproved(true)}
-                    className="rounded-md bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="bg-success text-white hover:bg-success/90 dark:text-background"
                   >
                     อนุมัติใบเสนอราคา
-                  </button>
-                  <span className="text-xs text-slate-500">ส่งออกได้หลังอนุมัติเท่านั้น · ระบบไม่ส่งถึงลูกค้าเอง</span>
+                  </Button>
+                  <span className="text-xs text-muted-foreground">ส่งออกได้หลังอนุมัติเท่านั้น · ระบบไม่ส่งถึงลูกค้าเอง</span>
                 </div>
               )}
             </div>
@@ -579,12 +647,12 @@ export function QuotationApp() {
 
         {quote && (
           <section className="space-y-2">
-            <h2 className="text-sm font-semibold text-slate-600">ตัวอย่างเอกสาร</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground">ตัวอย่างเอกสาร</h2>
             <QuotationDocument quote={quote} meta={meta} />
           </section>
         )}
 
-        <footer className="pt-4 text-center text-xs text-slate-500">
+        <footer className="pt-4 text-center text-xs text-muted-foreground">
           Open source (MIT) · ข้อมูลตัวอย่างทั้งหมดเป็นข้อมูลสมมติ · ตรวจสอบเอกสารทุกครั้งก่อนส่งให้ลูกค้า
         </footer>
       </div>

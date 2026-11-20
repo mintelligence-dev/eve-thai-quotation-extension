@@ -227,12 +227,13 @@ src/app/api/extract     inquiry → requested lines
 src/app/api/select      shortlists → item selections (no prices)
 src/app/api/engine      whether AI is available here (drives the mode switch)
 src/components/         review screen and printable quotation template
+src/components/ui/      Mintel UI components, copied in with the shadcn CLI (see components.json)
 public/samples/         synthetic catalogs and inquiries
 ```
 
 ### Tech stack
 
-Next.js 16 (App Router) · React 19 · Vercel AI SDK 7 + AI Gateway · Zod 4 · Tailwind CSS 4 · Vitest
+Next.js 16 (App Router) · React 19 · Vercel AI SDK 7 + AI Gateway · Zod 4 · Tailwind CSS 4 · [Mintel UI](https://mintel-ui.vercel.app) (theme and components, on Radix UI) · Vitest
 
 ### Contributing
 
