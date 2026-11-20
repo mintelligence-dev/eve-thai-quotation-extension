@@ -10,7 +10,7 @@ Approver sees   Issue quotation for draft D1 to ร้านสมชายก�
 Customer gets   ใบเสนอราคา QT-20261120-125255 … รวมทั้งสิ้น 8,517.20 บาท
 ```
 
-**Status: 0.1, not on npm yet.** It was run end to end in a local eve 1.1.0 agent (see [What was tested](#what-was-tested)). It has not been deployed, and not tried on LINE, Slack or any channel other than eve's HTTP channel.
+**Status: 0.1, on npm.** It was run end to end in a local eve 1.1.0 agent (see [What was tested](#what-was-tested)). It has not been deployed, and not tried on LINE, Slack or any channel other than eve's HTTP channel.
 
 [ภาษาไทย](#ภาษาไทย)
 
@@ -55,7 +55,7 @@ export default quotation({
 });
 ```
 
-The file name is the tool prefix: `quotation.ts` gives `quotation__draft`. Once the package is on npm, `eve add` will write this file and a sample catalog for you:
+The file name is the tool prefix: `quotation.ts` gives `quotation__draft`. `eve add` installs the package and writes this file and a sample catalog for you:
 
 ```bash
 eve add https://cdn.jsdelivr.net/npm/@eve-thai-quotation-extension/eve/r/quotation.json
@@ -90,7 +90,9 @@ In a local `eve dev` agent on eve 1.1.0 with `anthropic/claude-haiku-5.5`, over 
 
 The rules behind the tools have unit tests (`packages/eve/test`).
 
-**Not tested:** a deployed agent, any channel besides eve's HTTP channel, `eve add` end to end (the package is not on npm yet; the registry item itself reads correctly with `eve registry view`), a `{ path }` catalog on a deployed agent (the file may not be part of the deployment; use `{ url }` or `{ csv }` there until that is checked), and eve versions other than 1.1.0.
+`eve add` was run against the published 0.1.0 packages in a fresh `eve init` agent: it installed the package, wrote the two files, and the agent drafted and, after approval, issued a quotation.
+
+**Not tested:** a deployed agent, any channel besides eve's HTTP channel, a `{ path }` catalog on a deployed agent (the file may not be part of the deployment; use `{ url }` or `{ csv }` there until that is checked), and eve versions other than 1.1.0.
 
 ## Known limits
 

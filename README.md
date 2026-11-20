@@ -22,7 +22,7 @@
 | | ทำอะไร · What it is | สถานะ · Status |
 |---|---|---|
 | **เว็บแอป · Web app** | พนักงานแปะข้อความลูกค้า ตรวจร่าง อนุมัติ แล้วพิมพ์ · Staff paste a message, review the draft, approve and print | ใช้งานได้ · live: [demo](https://thai-quotation-copilot.vercel.app) |
-| **[eve extension](packages/eve)** | ให้ AI agent ที่สร้างด้วย [eve](https://eve.dev) ร่างใบเสนอราคาในแชต และรอคนอนุมัติก่อนออก · Lets an eve agent draft quotations in chat and wait for a person's approval | 0.1 · ทดสอบในเครื่องแล้ว ยังไม่ได้เผยแพร่บน npm · tested locally, not on npm yet |
+| **[eve extension](packages/eve)** | ให้ AI agent ที่สร้างด้วย [eve](https://eve.dev) ร่างใบเสนอราคาในแชต และรอคนอนุมัติก่อนออก · Lets an eve agent draft quotations in chat and wait for a person's approval | 0.1 · อยู่บน npm แล้ว ทดสอบในเครื่อง · on npm, tested locally |
 
 ทั้งสองทางใช้กฎชุดเดียวกันจาก [`packages/core`](packages/core): ราคามาจากแคตตาล็อกเท่านั้น และต้องมีคนอนุมัติก่อนส่งออก · Both run the same rules from `packages/core`: prices only come from the catalog, and a person approves before anything goes out.
 
@@ -221,7 +221,7 @@ See the Thai table above. The required columns are `sku, name, unit, unit_price`
 
 ### Reusing the matching module
 
-[`packages/core`](packages/core) (`@eve-thai-quotation-extension/core`) is plain TypeScript with no Next.js or React dependency, shared by the web app and the eve extension (not on npm yet). The model-backed parts live in `llm.ts` and are injected as `LineExtractor` and `MatchSelector` interfaces. See the code sample in the Thai section.
+[`packages/core`](packages/core) (`@eve-thai-quotation-extension/core`) is plain TypeScript with no Next.js or React dependency, shared by the web app and the eve extension, and published on npm. The model-backed parts live in `llm.ts` and are injected as `LineExtractor` and `MatchSelector` interfaces. See the code sample in the Thai section.
 
 ### Project layout
 
