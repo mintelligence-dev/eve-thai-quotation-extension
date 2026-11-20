@@ -1,0 +1,40 @@
+name: Bug report
+description: Something does not work as the README says. English or Thai is fine.
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - eve extension (packages/eve)
+        - Core rules (packages/core)
+        - Example agent (examples/thai-quotation-agent)
+        - Web demo
+        - Docs
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: >-
+        The smallest catalog rows and customer message that show the problem. Use made-up data:
+        do not paste real prices or real customer messages.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versions
+      description: Package versions, eve version, Node version, and the channel (Telegram, web, …) if it matters
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security problem
+    url: https://github.com/mintelligence-dev/eve-thai-quotation-extension/security/advisories/new
+    about: Report a vulnerability privately, not as a public issue
+  - name: eve documentation
+    url: https://eve.dev/docs
+    about: Questions about eve itself (agents, channels, deployment) are answered there
