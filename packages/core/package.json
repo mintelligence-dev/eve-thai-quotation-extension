@@ -1,6 +1,6 @@
 {
   "name": "@eve-thai-quotation-extension/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Thai and English quotation drafting: catalog import, item matching, review rules and pricing in integer satang. No framework, no runtime dependencies.",
   "keywords": ["quotation", "thai", "catalog", "pricing", "vat", "baht"],
   "license": "MIT",

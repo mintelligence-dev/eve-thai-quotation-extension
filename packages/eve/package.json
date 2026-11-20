@@ -1,6 +1,6 @@
 {
   "name": "@eve-thai-quotation-extension/eve",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "eve extension: draft Thai and English quotations from a customer message, priced from your own catalog, issued only after a person approves.",
   "keywords": [
     "quotation",
@@ -44,7 +44,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@eve-thai-quotation-extension/core": "0.1.0",
+    "@eve-thai-quotation-extension/core": "0.1.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
