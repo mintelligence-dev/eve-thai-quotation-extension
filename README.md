@@ -24,7 +24,7 @@
 | รูปแบบ · Option | รายละเอียด · Description | สถานะ · Status |
 |---|---|---|
 | **เว็บแอปพลิเคชัน · Web application** | พนักงานนำข้อความจากลูกค้ามาวาง ตรวจสอบร่างใบเสนอราคา อนุมัติ และสั่งพิมพ์ · Staff paste a customer message, review the draft quotation, approve it and print | พร้อมใช้งาน · Available: [demo](https://thai-quotation-copilot.vercel.app) |
-| **[eve extension](packages/eve)** | ให้ AI agent ที่พัฒนาด้วย [eve](https://eve.dev) จัดทำร่างใบเสนอราคาในแชต และรอการอนุมัติจากผู้มีอำนาจก่อนออกเอกสาร · Lets an eve agent draft quotations in chat and wait for an authorized person to approve before issuing | v0.1.0 (beta) · เผยแพร่บน [npm](https://www.npmjs.com/package/@eve-thai-quotation-extension/eve) · Published on npm · [ขอบเขตการทดสอบ · Test coverage](packages/eve#what-was-tested) |
+| **[eve extension](packages/eve)** | ให้ AI agent ที่พัฒนาด้วย [eve](https://eve.dev) จัดทำร่างใบเสนอราคาในแชต และรอการอนุมัติจากผู้มีอำนาจก่อนออกเอกสาร · Lets an eve agent draft quotations in chat and wait for an authorized person to approve before issuing | Beta · เผยแพร่บน [npm](https://www.npmjs.com/package/@eve-thai-quotation-extension/eve) · Published on npm · [ขอบเขตการทดสอบ · Test coverage](packages/eve#what-was-tested) |
 
 ทั้งสองรูปแบบใช้กฎชุดเดียวกันจาก [`packages/core`](packages/core): ราคาอ้างอิงจากแคตตาล็อกเท่านั้น และต้องได้รับการอนุมัติจากบุคคลก่อนส่งออกทุกครั้ง · Both options apply the same rules from `packages/core`: prices come only from the catalog, and a person must approve before anything is sent out.
 
