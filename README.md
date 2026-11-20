@@ -139,6 +139,8 @@ if (canApprove(draft, catalog).ok) {
 
 ยินดีรับ issue และ pull request ก่อนส่ง PR ให้รัน `npm test`, `npm run typecheck` และ `npm run lint` ให้ผ่าน ถ้าเป็นการเปลี่ยนแปลงใหญ่ ให้เปิด issue คุยกันก่อน
 
+พบช่องโหว่ด้านความปลอดภัย กรุณาอย่าเปิด issue สาธารณะ ดูวิธีแจ้งที่ [SECURITY.md](SECURITY.md)
+
 ### สัญญาอนุญาต
 
 เผยแพร่ภายใต้ [MIT License](LICENSE) © 2026 M Intelligence  
@@ -226,6 +228,8 @@ Next.js 16 (App Router) · React 19 · Vercel AI SDK 7 + AI Gateway · Zod 4 · 
 ### Contributing
 
 Issues and pull requests are welcome. Please make sure `npm test`, `npm run typecheck` and `npm run lint` pass before opening a PR, and open an issue first for larger changes.
+
+Found a security problem? Please do not open a public issue; see [SECURITY.md](SECURITY.md).
 
 ## License
 
