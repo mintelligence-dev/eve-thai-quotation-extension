@@ -17,14 +17,14 @@
 
 *ข้อความลูกค้ากลายเป็นร่างใบเสนอราคาที่ราคามาจากแคตตาล็อก รายการที่กำกวมหรือข้อมูลไม่ครบถูกชี้ให้คนตัดสิน พร้อมคำถามที่คัดลอกไปถามลูกค้าได้ · A customer message becomes a draft priced from the catalog; ambiguous or incomplete lines are left to a person, with questions ready to copy.*
 
-## สองทางใช้ · Two ways to use it
+## รูปแบบการใช้งาน · Usage options
 
-| | ทำอะไร · What it is | สถานะ · Status |
+| รูปแบบ · Option | รายละเอียด · Description | สถานะ · Status |
 |---|---|---|
-| **เว็บแอป · Web app** | พนักงานแปะข้อความลูกค้า ตรวจร่าง อนุมัติ แล้วพิมพ์ · Staff paste a message, review the draft, approve and print | ใช้งานได้ · live: [demo](https://thai-quotation-copilot.vercel.app) |
-| **[eve extension](packages/eve)** | ให้ AI agent ที่สร้างด้วย [eve](https://eve.dev) ร่างใบเสนอราคาในแชต และรอคนอนุมัติก่อนออก · Lets an eve agent draft quotations in chat and wait for a person's approval | 0.1 · อยู่บน npm แล้ว ทดสอบในเครื่อง · on npm, tested locally |
+| **เว็บแอปพลิเคชัน · Web application** | พนักงานนำข้อความจากลูกค้ามาวาง ตรวจสอบร่างใบเสนอราคา อนุมัติ และสั่งพิมพ์ · Staff paste a customer message, review the draft quotation, approve it and print | พร้อมใช้งาน · Available: [demo](https://thai-quotation-copilot.vercel.app) |
+| **[eve extension](packages/eve)** | ให้ AI agent ที่พัฒนาด้วย [eve](https://eve.dev) จัดทำร่างใบเสนอราคาในแชต และรอการอนุมัติจากผู้มีอำนาจก่อนออกเอกสาร · Lets an eve agent draft quotations in chat and wait for an authorized person to approve before issuing | v0.1.0 (beta) · เผยแพร่บน [npm](https://www.npmjs.com/package/@eve-thai-quotation-extension/eve) · Published on npm · [ขอบเขตการทดสอบ · Test coverage](packages/eve#what-was-tested) |
 
-ทั้งสองทางใช้กฎชุดเดียวกันจาก [`packages/core`](packages/core): ราคามาจากแคตตาล็อกเท่านั้น และต้องมีคนอนุมัติก่อนส่งออก · Both run the same rules from `packages/core`: prices only come from the catalog, and a person approves before anything goes out.
+ทั้งสองรูปแบบใช้กฎชุดเดียวกันจาก [`packages/core`](packages/core): ราคาอ้างอิงจากแคตตาล็อกเท่านั้น และต้องได้รับการอนุมัติจากบุคคลก่อนส่งออกทุกครั้ง · Both options apply the same rules from `packages/core`: prices come only from the catalog, and a person must approve before anything is sent out.
 
 ---
 
