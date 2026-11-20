@@ -44,6 +44,8 @@ npx vercel@latest dev --local --listen 4320   # the web app and the agent togeth
 
 Open <http://localhost:4320>. "No AI" mode works straight away. "AI" mode needs model access: link a Vercel project (`npx eve link`) or put `AI_GATEWAY_API_KEY` in `.env.local`.
 
+To add a [Mintel UI](https://mintel-ui.vercel.app) component, run the shadcn CLI from this folder, not from `apps/web`: `npx shadcn@latest add @mintel/<name>`. `components.json` is here because the CLI needs a `package.json` next to it. Answer no if it asks to overwrite `lib/utils.ts`.
+
 Stopping `vercel dev` can leave its child processes running and still serving old code. If a change does not show up, check for leftover `next dev` and `eve` processes from this folder.
 
 ## Deploy to Vercel
@@ -91,14 +93,13 @@ Read this before you put real prices or customers into a deployment.
 
 On the deployed site, in a browser: a mixed Thai and English message in "AI" mode produced six matched lines; document details were saved; approving produced quotation `QT-20261120-191257` with the right total. The catalog page asks for the password, the agent's session route refuses outside callers, and the Telegram route refuses a request without the secret.
 
-Locally: "no AI" mode gave the same lines, statuses and questions as the earlier web demo on its samples; changing a price on `/catalog`; the storage layer against the real private Blob store.
+Locally: "no AI" mode gave the same lines, statuses and questions as the earlier web demo on its samples; the item picker (close matches, catalog search, adding a line) and the date picker on a draft; changing a price on `/catalog`; the storage layer against the real private Blob store.
 
 Not tested: a real conversation with the Telegram bot on the deployment, the Telegram admin commands as a real admin, uploading a CSV file through the button, printing, the downloaded CSV, phones, dark mode on the reworked pages, and the spending cap actually stopping requests.
 
 ## Known gaps
 
 - No PDF is generated on the server, so the bot sends the quotation as text, not as a file.
-- The item picker on a draft line is a simple list, not Mintel UI's combobox, and the date field is the browser's own.
 - An approved quotation cannot be reopened.
 
 ## License
