@@ -1,5 +1,5 @@
-import { computeTotals, lineTotalSatang } from "./money";
-import { sameUnit } from "./text";
+import { computeTotals, lineTotalSatang } from "./money.js";
+import { sameUnit } from "./text.js";
 import type {
   CatalogItem,
   DraftIssue,
@@ -7,7 +7,7 @@ import type {
   PricedQuotation,
   QuotationDraft,
   QuotationSettings,
-} from "./types";
+} from "./types.js";
 
 /** Issues that disappear once a person picks the item themselves. */
 const SELECTION_ISSUES: DraftIssue["kind"][] = ["ambiguous", "not_found", "rejected_sku"];

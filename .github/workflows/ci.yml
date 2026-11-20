@@ -19,7 +19,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # eve, used by the extension in packages/eve, needs Node 24 or later.
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run lint
@@ -27,3 +28,4 @@ jobs:
       - run: npm test
       # No AI key in CI: the app builds and runs in offline mode without one.
       - run: npm run build
+      - run: npm run build:eve

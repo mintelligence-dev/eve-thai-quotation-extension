@@ -1,0 +1,34 @@
+{
+  "name": "@eve-thai-quotation-extension/core",
+  "version": "0.1.0",
+  "description": "Thai and English quotation drafting: catalog import, item matching, review rules and pricing in integer satang. No framework, no runtime dependencies.",
+  "keywords": ["quotation", "thai", "catalog", "pricing", "vat", "baht"],
+  "license": "MIT",
+  "author": "M Intelligence",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mintelligence-dev/eve-thai-quotation-extension.git",
+    "directory": "packages/core"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./llm": { "types": "./dist/llm.d.ts", "default": "./dist/llm.js" },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit"
+  },
+  "peerDependencies": {
+    "ai": ">=7",
+    "zod": ">=4"
+  },
+  "peerDependenciesMeta": {
+    "ai": { "optional": true },
+    "zod": { "optional": true }
+  },
+  "engines": { "node": ">=20" }
+}

@@ -1,5 +1,5 @@
-import { normalize, toArabicDigits, UNIT_WORDS } from "./text";
-import type { RequestedLine } from "./types";
+import { normalize, toArabicDigits, UNIT_WORDS } from "./text.js";
+import type { RequestedLine } from "./types.js";
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const UNIT_PATTERN = UNIT_WORDS.map(escape).join("|");

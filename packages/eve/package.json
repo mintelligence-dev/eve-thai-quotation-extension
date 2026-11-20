@@ -1,0 +1,61 @@
+{
+  "name": "@eve-thai-quotation-extension/eve",
+  "version": "0.1.0",
+  "description": "eve extension: draft Thai and English quotations from a customer message, priced from your own catalog, issued only after a person approves.",
+  "keywords": [
+    "quotation",
+    "thai",
+    "eve",
+    "agent",
+    "catalog",
+    "pricing"
+  ],
+  "license": "MIT",
+  "author": "M Intelligence",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mintelligence-dev/eve-thai-quotation-extension.git",
+    "directory": "packages/eve"
+  },
+  "type": "module",
+  "eve": {
+    "extension": {
+      "source": "./extension",
+      "dist": "./dist/extension"
+    }
+  },
+  "files": [
+    "dist",
+    "r",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    },
+    "./tools": {
+      "types": "./dist/tools/index.d.ts",
+      "default": "./dist/tools/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "eve extension build && node scripts/build-registry.mjs",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@eve-thai-quotation-extension/core": "0.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "eve": "1.1.0",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "eve": "*"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

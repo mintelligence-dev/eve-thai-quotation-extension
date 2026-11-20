@@ -1,7 +1,7 @@
 // Prints the offline (heuristic) draft for every sample inquiry. Usage: npx tsx scripts/try-samples.ts
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { buildDraft, customerQuestions, parseCatalogCsv } from "../src/lib/quotation";
+import { buildDraft, customerQuestions, parseCatalogCsv } from "@eve-thai-quotation-extension/core";
 
 const dir = join(__dirname, "..", "public", "samples");
 const catalogs = {

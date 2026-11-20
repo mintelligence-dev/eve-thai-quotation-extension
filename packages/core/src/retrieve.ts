@@ -1,5 +1,5 @@
-import { compact, diceSimilarity, toArabicDigits, tokenize } from "./text";
-import type { Candidate, CatalogItem } from "./types";
+import { compact, diceSimilarity, toArabicDigits, tokenize } from "./text.js";
+import type { Candidate, CatalogItem } from "./types.js";
 
 function numbersIn(text: string): Set<string> {
   // "1/2" and "4" are both meaningful sizes; keep fractions as one token.

@@ -1,6 +1,6 @@
-import { parseBahtToSatang } from "./money";
-import { normalize } from "./text";
-import type { CatalogImportResult, CatalogItem, CsvIssue } from "./types";
+import { parseBahtToSatang } from "./money.js";
+import { normalize } from "./text.js";
+import type { CatalogImportResult, CatalogItem, CsvIssue } from "./types.js";
 
 export const MAX_CATALOG_ROWS = 10_000;
 

@@ -1,8 +1,8 @@
 import { generateText, Output, type LanguageModel } from "ai";
 import { z } from "zod";
-import { compact } from "./text";
-import type { LineExtractor, MatchSelector } from "./pipeline";
-import type { MatchRequest, RequestedLine, Selection } from "./types";
+import { compact } from "./text.js";
+import type { LineExtractor, MatchSelector } from "./pipeline.js";
+import type { MatchRequest, RequestedLine, Selection } from "./types.js";
 
 const extractionSchema = z.object({
   lines: z.array(

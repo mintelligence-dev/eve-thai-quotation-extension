@@ -34,7 +34,7 @@ import {
   type QuotationSettings,
   type RequestedLine,
   type Selection,
-} from "@/lib/quotation";
+} from "@eve-thai-quotation-extension/core";
 import { ModeSwitch, type Availability, type MatchMode } from "./mode-switch";
 import { QuotationDocument, type QuotationMeta } from "./quotation-document";
 import { CatalogSearch, ReviewTable } from "./review-table";

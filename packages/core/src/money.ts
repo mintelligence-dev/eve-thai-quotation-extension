@@ -1,5 +1,5 @@
-import { toArabicDigits } from "./text";
-import type { QuotationSettings, QuotationTotals } from "./types";
+import { toArabicDigits } from "./text.js";
+import type { QuotationSettings, QuotationTotals } from "./types.js";
 
 /**
  * Parses a baht amount such as "1,250.50", "฿99", "๑๒๐" into integer satang.

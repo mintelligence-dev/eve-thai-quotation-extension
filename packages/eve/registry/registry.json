@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "eve-thai-quotation-extension",
+  "homepage": "https://github.com/mintelligence-dev/eve-thai-quotation-extension",
+  "items": [
+    {
+      "name": "quotation",
+      "type": "registry:item",
+      "title": "Thai quotation",
+      "description": "Draft quotations from a customer's message, priced from your own catalog and issued only after a person approves.",
+      "dependencies": ["@eve-thai-quotation-extension/eve@{{version}}"],
+      "files": [
+        {
+          "path": "quotation/quotation.ts",
+          "type": "registry:file",
+          "target": "agent/extensions/quotation.ts"
+        },
+        {
+          "path": "quotation/catalog.csv",
+          "type": "registry:file",
+          "target": "data/catalog.csv"
+        }
+      ]
+    }
+  ]
+}

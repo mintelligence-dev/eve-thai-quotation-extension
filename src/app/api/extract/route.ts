@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { heuristicExtractor } from "@/lib/quotation";
+import { heuristicExtractor } from "@eve-thai-quotation-extension/core";
 import { getEngine, modeSchema, OFFLINE_FALLBACK_WARNING, readJson } from "@/lib/server/ai";
 
 const bodySchema = z.object({ inquiry: z.string().trim().min(1).max(8_000), mode: modeSchema });

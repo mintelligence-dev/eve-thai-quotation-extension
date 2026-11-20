@@ -14,7 +14,7 @@ import {
   type DraftIssue,
   type DraftLine,
   type MatchStatus,
-} from "@/lib/quotation";
+} from "@eve-thai-quotation-extension/core";
 import { cn } from "@/lib/utils";
 
 const STATUS: Record<MatchStatus, { label: string; variant: "success" | "warning" | "destructive" }> = {
