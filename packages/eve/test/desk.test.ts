@@ -243,9 +243,9 @@ describe("desk", () => {
     expect(issued.view.issuedAs).toBe(issued.issued?.quoteNo);
 
     // The record on disk is the one the agent reads next.
-    const onDisk = JSON.parse(readFileSync(join(dir, `${token}.json`), "utf8"));
+    const onDisk = JSON.parse(readFileSync(join(dir, "drafts", `${token}.json`), "utf8"));
     expect(onDisk.issuedAs).toBe(issued.issued?.quoteNo);
-    expect(readdirSync(dir).filter((f) => f.endsWith(".tmp"))).toEqual([]);
+    expect(readdirSync(join(dir, "drafts")).filter((f) => f.endsWith(".tmp"))).toEqual([]);
   });
 
   it("does not issue a total the approver did not see", async () => {

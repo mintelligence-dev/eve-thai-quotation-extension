@@ -83,13 +83,13 @@ The catalog format is the same as the web app's: `sku, name, unit, unit_price` a
 
 ## Edit a draft on a web page
 
-By default a draft lives in the conversation. With `sharing`, each draft is also kept in a folder and gets a link, so a person can open the same draft in a table, change it, and approve it there. The agent hands out the link and reads the draft again before it issues.
+By default a draft lives in the conversation. With `sharing`, each draft is also kept in storage and gets a link, so a person can open the same draft in a table, change it, and approve it there. The agent hands out the link and reads the draft again before it issues.
 
 ```ts
 quotation({
   // ...
   sharing: {
-    storage: { dir: ".data/drafts" },      // a folder of JSON files
+    storage: { dir: ".data/drafts" },      // a folder of files; or { blob: {} } on Vercel
     baseUrl: "https://quotes.example.com", // a draft's link is <baseUrl>/q/<token>
     expiresDays: 30,
   },
@@ -113,7 +113,7 @@ await desk.issue(token, { grandTotal });                  // refuses if the tota
 Read this before you use it:
 
 - **The link is the key.** Anyone who holds a draft's link can read it, and anyone who can reach your page's `issue` call can issue it. Calling `desk.issue` is the approval; the `approval` setting only covers the agent's `issue` tool. Put your own sign-in in front of the page when the link may travel beyond the people allowed to approve.
-- **`dir` storage is one machine.** It suits local use and a server with a disk. On serverless hosting the folder is not shared between requests; a storage option for that does not exist yet.
+- **Two kinds of storage.** `{ dir }` is a folder of files: it suits local use and a server with a disk, and does not work on serverless hosting, where the folder is not shared between requests. `{ blob: { prefix? } }` is Vercel Blob with private access, for Vercel: install `@vercel/blob`, create a private store, and have `BLOB_READ_WRITE_TOKEN` in the environment. Use the same storage in `sharing` and in `openDesk`.
 - **Last write wins.** Two people changing the same draft at the same moment can overwrite each other.
 - **Uploaded catalogs are off by default.** With `allowUploadedCatalogs: true` (in `sharing` and in `openDesk`), `desk.uploadCatalog(csv)` keeps a price list and returns a `catalogId`; `desk.create({ inquiry, catalogId })` or the `draft` tool's `catalogId` then prices a draft from it instead of your `catalog`. Whoever can upload then chooses the prices, so turn it on only for a demo or a page that only trusted staff reach.
 - **A stored shop catalog is off by default.** With `managedCatalog: true` (in `sharing` and in `openDesk`), `desk.setShopCatalog(csv, by)` replaces the shop's catalog, `desk.setShopPrice(sku, price, by)` changes one price, `desk.undoShopCatalog(by)` goes back one step, and `desk.shopCatalog()` / `desk.shopCatalogCsv()` read it. Once set, the stored catalog is used instead of `catalog`, by the agent's tools too. A file with errors is refused and nothing changes. Open drafts are priced from the new catalog the next time they are opened; issued quotations keep their prices. Guard these calls: they set your prices.
@@ -130,11 +130,11 @@ In a local `eve dev` agent on eve 1.1.0 with `anthropic/claude-haiku-5.5`, over 
 
 The rules behind the tools have unit tests (`packages/eve/test`).
 
-Shared drafts and the `desk` export (0.2.0) were run locally with a Next.js page beside the agent: paste a message, change lines in a table, approve, see the printable quotation; and the same with an uploaded catalog. Issuing from chat after a change on the page was not tried, and neither was any of this on a deployed agent.
+Shared drafts and the `desk` export (0.2.0) were run with a Next.js page beside the agent, locally and deployed on Vercel with Blob storage ([thai-quotation-agent.vercel.app](https://thai-quotation-agent.vercel.app)): paste a message, change lines in a table, set the document details, approve, see the printable quotation; and locally, the same with an uploaded catalog and a price change in the stored shop catalog. Not tried: issuing from chat after a change on the page, and a real Telegram conversation with the deployed agent.
 
 `eve add` was run against the published 0.1.0 packages in a fresh `eve init` agent: it installed the package, wrote the two files, and the agent drafted and, after approval, issued a quotation.
 
-**Not tested:** a deployed agent, any channel besides eve's HTTP channel, a `{ path }` catalog on a deployed agent (the file may not be part of the deployment; use `{ url }` or `{ csv }` there until that is checked), and eve versions other than 1.1.0.
+**Not tested:** any channel besides eve's HTTP channel in a real conversation, a `{ path }` catalog on a deployed agent (the file may not be part of the deployment; use `{ url }` or `{ csv }` there until that is checked), and eve versions other than 1.1.0.
 
 ## Known limits
 

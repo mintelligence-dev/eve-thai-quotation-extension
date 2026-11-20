@@ -9,8 +9,12 @@ import { formatAmount, type CatalogItem } from "@eve-thai-quotation-extension/co
 
 import type { StoredDraft } from "./service";
 
-/** Where shared drafts are kept. `dir` is a folder of JSON files, for one machine or a mounted volume. */
-export type DraftStorageConfig = { dir: string };
+/**
+ * Where shared drafts and catalogs are kept.
+ * - `dir`: a folder of files, for one machine or a mounted volume.
+ * - `blob`: Vercel Blob with private access, for serverless hosting.
+ */
+export type DraftStorageConfig = { dir: string } | { blob: { prefix?: string } };
 
 export interface SharedDraft extends StoredDraft {
   token: string;
@@ -86,84 +90,96 @@ export function toShared(stored: StoredDraft, token: string, expiresDays: number
   };
 }
 
-function dirStorage(dir: string): DraftStorage {
-  const file = async (token: string) => {
-    const { join } = await import("node:path");
-    return join(dir, `${token}.json`);
-  };
+/** A flat set of text files: all the storage needs. */
+interface Files {
+  /** null when there is no such file. */
+  read(path: string): Promise<string | null>;
+  /** Replaces the file as a whole; a reader never sees half of it. */
+  write(path: string, text: string, contentType: string): Promise<void>;
+}
+
+function dirFiles(dir: string): Files {
   return {
-    async get(token) {
-      if (!isToken(token)) return null;
+    async read(path) {
       const { readFile } = await import("node:fs/promises");
-      let text: string;
+      const { join } = await import("node:path");
       try {
-        text = await readFile(await file(token), "utf8");
+        return await readFile(join(dir, path), "utf8");
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
         throw error;
       }
-      const record = JSON.parse(text) as SharedDraft;
-      return Date.parse(record.expiresAt) > Date.now() ? record : null;
     },
-    async put(record) {
-      if (!isToken(record.token)) throw new Error("Not a draft token.");
+    async write(path, text) {
       const { mkdir, rename, writeFile } = await import("node:fs/promises");
-      await mkdir(dir, { recursive: true });
-      const target = await file(record.token);
+      const { dirname, join } = await import("node:path");
+      const target = join(dir, path);
+      await mkdir(dirname(target), { recursive: true });
       // Write beside the file and rename, so a reader never sees half a draft.
       const temp = `${target}.${randomBytes(4).toString("hex")}.tmp`;
-      await writeFile(temp, JSON.stringify(record), "utf8");
-      await rename(temp, target);
-    },
-    async getCatalog(catalogId) {
-      if (!isCatalogId(catalogId)) return null;
-      const { readFile } = await import("node:fs/promises");
-      const { join } = await import("node:path");
-      try {
-        return await readFile(join(dir, "catalogs", `${catalogId}.csv`), "utf8");
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-        throw error;
-      }
-    },
-    async putCatalog(csv) {
-      if (Buffer.byteLength(csv, "utf8") > MAX_CATALOG_BYTES) throw new Error("The catalog file is too large (limit 1 MB).");
-      const { mkdir, rename, writeFile } = await import("node:fs/promises");
-      const { join } = await import("node:path");
-      const catalogId = createHash("sha256").update(csv).digest("hex").slice(0, 32);
-      const folder = join(dir, "catalogs");
-      await mkdir(folder, { recursive: true });
-      const target = join(folder, `${catalogId}.csv`);
-      const temp = `${target}.${randomBytes(4).toString("hex")}.tmp`;
-      await writeFile(temp, csv, "utf8");
-      await rename(temp, target);
-      return catalogId;
-    },
-    async getShopCatalog() {
-      const { readFile } = await import("node:fs/promises");
-      const { join } = await import("node:path");
-      try {
-        return JSON.parse(await readFile(join(dir, "shop-catalog.json"), "utf8")) as ShopCatalogPointer;
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-        throw error;
-      }
-    },
-    async setShopCatalog(pointer) {
-      if (!isCatalogId(pointer.catalogId)) throw new Error("Not a catalog id.");
-      const { mkdir, rename, writeFile } = await import("node:fs/promises");
-      const { join } = await import("node:path");
-      await mkdir(dir, { recursive: true });
-      const target = join(dir, "shop-catalog.json");
-      const temp = `${target}.${randomBytes(4).toString("hex")}.tmp`;
-      await writeFile(temp, JSON.stringify(pointer), "utf8");
+      await writeFile(temp, text, "utf8");
       await rename(temp, target);
     },
   };
 }
 
+/**
+ * Vercel Blob, with private access: the files can only be read with the store's token, never
+ * by URL. Needs the `@vercel/blob` package and BLOB_READ_WRITE_TOKEN in the environment.
+ */
+function blobFiles(prefix: string): Files {
+  const key = (path: string) => `${prefix.replace(/^\/+|\/+$/g, "")}/${path}`;
+  const sdk = () => import("@vercel/blob");
+  return {
+    async read(path) {
+      const { get } = await sdk();
+      // Straight from storage: a cached copy could be a draft from before the last change.
+      const found = await get(key(path), { access: "private", useCache: false });
+      if (!found || found.statusCode !== 200) return null;
+      return new Response(found.stream).text();
+    },
+    async write(path, text, contentType) {
+      const { put } = await sdk();
+      await put(key(path), text, { access: "private", addRandomSuffix: false, allowOverwrite: true, contentType });
+    },
+  };
+}
+
+function storageOn(files: Files): DraftStorage {
+  return {
+    async get(token) {
+      if (!isToken(token)) return null;
+      const text = await files.read(`drafts/${token}.json`);
+      if (text === null) return null;
+      const record = JSON.parse(text) as SharedDraft;
+      return Date.parse(record.expiresAt) > Date.now() ? record : null;
+    },
+    async put(record) {
+      if (!isToken(record.token)) throw new Error("Not a draft token.");
+      await files.write(`drafts/${record.token}.json`, JSON.stringify(record), "application/json");
+    },
+    async getCatalog(catalogId) {
+      return isCatalogId(catalogId) ? files.read(`catalogs/${catalogId}.csv`) : null;
+    },
+    async putCatalog(csv) {
+      if (Buffer.byteLength(csv, "utf8") > MAX_CATALOG_BYTES) throw new Error("The catalog file is too large (limit 1 MB).");
+      const catalogId = createHash("sha256").update(csv).digest("hex").slice(0, 32);
+      await files.write(`catalogs/${catalogId}.csv`, csv, "text/csv; charset=utf-8");
+      return catalogId;
+    },
+    async getShopCatalog() {
+      const text = await files.read("shop-catalog.json");
+      return text === null ? null : (JSON.parse(text) as ShopCatalogPointer);
+    },
+    async setShopCatalog(pointer) {
+      if (!isCatalogId(pointer.catalogId)) throw new Error("Not a catalog id.");
+      await files.write("shop-catalog.json", JSON.stringify(pointer), "application/json");
+    },
+  };
+}
+
 export function openStorage(config: DraftStorageConfig): DraftStorage {
-  return dirStorage(config.dir);
+  return storageOn("blob" in config ? blobFiles(config.blob.prefix ?? "quotation") : dirFiles(config.dir));
 }
 
 export const draftUrl = (baseUrl: string, token: string): string => `${baseUrl.replace(/\/+$/, "")}/q/${token}`;
