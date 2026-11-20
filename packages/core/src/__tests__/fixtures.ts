@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { parseCatalogCsv } from "../csv";
 import type { CatalogItem } from "../types";
 
-const SAMPLES = join(__dirname, "..", "..", "..", "..", "public", "samples");
+const SAMPLES = join(__dirname, "..", "..", "..", "..", "samples");
 
 export function sampleCatalog(name: "construction-th" | "office-en"): CatalogItem[] {
   const result = parseCatalogCsv(readFileSync(join(SAMPLES, `catalog-${name}.csv`), "utf8"));

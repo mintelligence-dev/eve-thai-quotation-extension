@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { buildDraft, customerQuestions, parseCatalogCsv } from "@eve-thai-quotation-extension/core";
 
-const dir = join(__dirname, "..", "public", "samples");
+const dir = join(__dirname, "..", "samples");
 const catalogs = {
   construction: parseCatalogCsv(readFileSync(join(dir, "catalog-construction-th.csv"), "utf8")).items,
   office: parseCatalogCsv(readFileSync(join(dir, "catalog-office-en.csv"), "utf8")).items,

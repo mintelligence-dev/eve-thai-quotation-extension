@@ -10,7 +10,7 @@
 
 [English](README.md) · **ภาษาไทย**
 
-[![ข้อความลูกค้ากลายเป็นร่างใบเสนอราคา รายการที่ไม่ชัดถูกชี้ให้คนตรวจ](docs/screenshot.png)](https://thai-quotation-copilot.vercel.app)
+[![ร่างใบเสนอราคาที่สร้างจากข้อความลูกค้า พร้อมให้คนตรวจและอนุมัติ](docs/screenshot.png)](https://thai-quotation-agent.vercel.app)
 
 ## ใน repository นี้มีอะไร
 
@@ -19,9 +19,7 @@
 | [`packages/eve`](packages/eve) | extension สำหรับ agent ที่สร้างด้วย [eve](https://eve.dev): เครื่องมือร่าง ค้นหา แก้ไข และออกใบเสนอราคา โดยต้องอนุมัติก่อนออก | ทุกช่องทางที่ agent ของคุณมี เช่น Telegram, Slack, แชตบนเว็บ | `eve add` (ดู[เริ่มใช้งาน](#เริ่มใช้งาน)) |
 | [`packages/core`](packages/core) | ตัวกฎล้วน ๆ: นำเข้าแคตตาล็อก จับคู่สินค้าไทยและอังกฤษ ตรวจร่าง คิดราคา ไม่ผูกกับ framework ใด | โปรเจกต์ TypeScript ใดก็ได้ | `npm install @eve-thai-quotation-extension/core` |
 | [`examples/thai-quotation-agent`](examples/thai-quotation-agent) | agent ตัวอย่างที่ใช้ extension ครบชุด: หน้าเว็บกับ bot Telegram ทำงานกับร่างและแคตตาล็อกชุดเดียวกัน | เว็บและ Telegram | [thai-quotation-agent.vercel.app](https://thai-quotation-agent.vercel.app) |
-| เว็บเดโม (root ของ repository) | แอปหน้าเดียวรุ่นแรก แคตตาล็อกอยู่ในเบราว์เซอร์เท่านั้น ไม่ได้ใช้ eve | เว็บอย่างเดียว | [thai-quotation-copilot.vercel.app](https://thai-quotation-copilot.vercel.app) |
-
-ทั้งสี่ส่วนคิดราคาด้วยโค้ดชุดเดียวกันใน `packages/core`
+ทั้งสามส่วนคิดราคาด้วยโค้ดชุดเดียวกันใน `packages/core`
 
 ## ทำงานอย่างไร
 
@@ -38,9 +36,9 @@
 | ราคามาจากแคตตาล็อกเท่านั้น | ผลลัพธ์ของ AI ไม่มีช่องราคา ราคาถูกดึงตามรหัสสินค้าที่จุดเดียวคือ `priceQuotation()` |
 | ไม่สร้างสินค้าขึ้นเอง | AI ตอบได้แค่รหัสที่อยู่ในรายการคัดเลือกของบรรทัดนั้น ถ้าตอบอย่างอื่น ระบบปฏิเสธและส่งบรรทัดนั้นกลับให้คนเลือก |
 | คนเป็นผู้อนุมัติ | อนุมัติได้เมื่อทุกบรรทัดมีสินค้าและจำนวน และยืนยันหน่วยที่ไม่ตรงแล้ว ใน extension การออกใบเป็นการเรียกเครื่องมือที่ eve หยุดรอการอนุมัติ และจะถูกปฏิเสธถ้ายอดเปลี่ยนหลังจากผู้อนุมัติเห็น |
-| ข้อมูลตัวอย่างเป็นของสมมติ | แคตตาล็อก ยี่ห้อ และข้อความทั้งหมดใน `public/samples/` แต่งขึ้น |
+| ข้อมูลตัวอย่างเป็นของสมมติ | แคตตาล็อก ยี่ห้อ และข้อความทั้งหมดใน `samples/` แต่งขึ้น |
 
-แต่ละส่วนเก็บข้อมูลต่างกัน: เว็บเดโมเก็บแคตตาล็อกไว้ในเบราว์เซอร์ ส่วน extension และ agent ตัวอย่างเก็บร่างไว้บนเซิร์ฟเวอร์ ควรอ่าน README ของแต่ละส่วนก่อนใส่ราคาจริง
+เมื่อเปิด `sharing` extension จะเก็บร่างไว้ในที่เก็บข้อมูล และ agent ตัวอย่างก็เก็บไว้บนเซิร์ฟเวอร์เช่นกัน ควรอ่าน [README ของ extension](packages/eve) และ [README ของตัวอย่าง](examples/thai-quotation-agent#who-can-do-what) ก่อนใส่ราคาจริง
 
 ## เริ่มใช้งาน
 
@@ -75,23 +73,9 @@ if (canApprove(draft, catalog).ok) {
 
 ถ้าไม่ใช้ AI `buildDraft` จะอ่านข้อความด้วยกฎที่มีในตัว ถ้าจะใช้ AI ให้ส่ง `createLlmExtractor` และ `createLlmSelector` จาก `@eve-thai-quotation-extension/core/llm`
 
-### รันเว็บเดโม
+### รันตัวอย่าง
 
-```bash
-npm install
-cp .env.example .env.local   # ใส่ AI_GATEWAY_API_KEY หรือไม่ใส่ก็ได้
-npm run dev                  # http://localhost:3000
-```
-
-- **ไม่มีคีย์:** เดโมทำงานแบบออฟไลน์ จับคู่ด้วยกฎ (ตัดคำไทยด้วย `Intl.Segmenter`, เทียบตัวสะกดใกล้เคียง, ชื่อเรียกอื่น) ไม่มีค่าใช้จ่าย
-- **มีคีย์ [AI Gateway](https://vercel.com/docs/ai-gateway):** AI เป็นผู้อ่านข้อความ ซึ่งรับมือกับข้อความไม่เป็นระเบียบได้ดีกว่า ถ้าเรียก AI ไม่สำเร็จ เดโมจะใช้โหมดออฟไลน์แทนและแจ้งบนหน้าจอ
-- **โปรเจกต์ที่ link กับ Vercel แล้ว:** `vercel env pull .env.local` จะได้ `VERCEL_OIDC_TOKEN` อายุสั้นมาใช้แทนคีย์
-
-ปุ่มมุมขวาบนเลือก "ใช้ AI" หรือ "ไม่ใช้ AI" ได้ทุกร่าง ตั้ง `QUOTATION_AI_MODE=offline` เพื่อปิด AI สำหรับทุกคน และ `QUOTATION_MODEL` เพื่อเปลี่ยนโมเดล
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension&project-name=thai-quotation-copilot&repository-name=thai-quotation-copilot&env=AI_GATEWAY_API_KEY&envDescription=AI%20Gateway%20API%20key%3A%20Vercel%20dashboard%20%3E%20AI%20Gateway%20%3E%20API%20Keys%20%3E%20Create%20key&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fai-gateway%2Fauthentication)
-
-ปุ่มนี้ deploy เฉพาะเว็บเดโม เดโมไม่มีระบบ login ใครเข้าถึงสำเนาของคุณได้ก็ใช้ AI ในค่าใช้จ่ายของคุณได้ จึงควรตั้งวงเงินของคีย์ และจำกัดจำนวนคำขอที่ `/api/extract` กับ `/api/select` ดู [SECURITY.md](SECURITY.md)
+[agent ตัวอย่าง](examples/thai-quotation-agent) มีหน้าเว็บและ bot Telegram README ของตัวอย่างอธิบายวิธีรันในเครื่อง วิธี deploy ขึ้น Vercel และใครทำอะไรได้บ้างบนระบบที่ deploy แล้ว
 
 ## รูปแบบแคตตาล็อก
 
@@ -120,9 +104,9 @@ npm run dev                  # http://localhost:3000
 
 ## ค่าใช้จ่าย
 
-**Hosting** เว็บเดโมมีหน้าเว็บ static หนึ่งหน้า กับ API function สั้น ๆ สองตัว ทดลองบนแพ็กเกจ Hobby ได้ การใช้งานเชิงพาณิชย์ต้องใช้ Pro ขึ้นไป ดู <https://vercel.com/pricing>
+กฎใน `core` ไม่มีค่าใช้จ่ายในการรัน ส่วนโมเดลคิดตามจำนวน token เช่น ผ่าน [AI Gateway](https://vercel.com/docs/ai-gateway)
 
-**โมเดล** คิดตามจำนวน token ผ่าน AI Gateway เว็บเดโมเรียกโมเดล 2 ครั้งต่อข้อความ คืออ่านรายการ 1 ครั้ง และเลือกสินค้า 1 ครั้ง ประเมินจากขนาด prompt จริงของข้อความตัวอย่าง 6 บรรทัด (ประมาณ 3,400 ตัวอักษร รวม schema) ได้ราว 3,000 input tokens และ 800 output tokens ต่อข้อความ ตัวเลขนี้ไม่ได้วัดจากการเรียกจริง และภาษาไทยใช้ token ต่อตัวอักษรมากกว่าภาษาอังกฤษ
+เมื่อใช้ตัวอ่านและตัวเลือกสินค้าของ `core` ข้อความหนึ่งข้อความเรียกโมเดล 2 ครั้ง คืออ่านรายการ 1 ครั้ง และเลือกสินค้า 1 ครั้ง ประเมินจากขนาด prompt จริงของข้อความตัวอย่าง 6 บรรทัด (ประมาณ 3,400 ตัวอักษร รวม schema) ได้ราว 3,000 input tokens และ 800 output tokens ต่อข้อความ ตัวเลขนี้ไม่ได้วัดจากการเรียกจริง และภาษาไทยใช้ token ต่อตัวอักษรมากกว่าภาษาอังกฤษ
 
 | โมเดล | ราคา input / output ต่อ 1M token* | ประมาณต่อข้อความ |
 |---|---|---|
@@ -138,8 +122,8 @@ agent ของ eve ใช้มากกว่านี้ต่อข้อค
 
 - ยังไม่แปลงหน่วย (เช่น กล่อง ↔ ชิ้น) ถ้าหน่วยไม่ตรง ระบบชี้ให้คนยืนยัน
 - ยังไม่มีส่วนลดหรือราคาขั้นบันได
-- โหมดออฟไลน์อาจอ่านผิด เมื่อสเปกที่มีหน่วยมาก่อนจำนวน เช่น "ปูน 50 กก. ตราเพชรา 10 ถุง" ซึ่ง AI จัดการได้ดีกว่า
-- extension ออกใบเสนอราคาเป็นข้อความ หน้าสำหรับพิมพ์มีในเว็บเดโมและ agent ตัวอย่าง ทั้งสองยังไม่สร้างไฟล์ PDF บนเซิร์ฟเวอร์
+- การจับคู่แบบไม่ใช้โมเดลอาจอ่านผิด เมื่อสเปกที่มีหน่วยมาก่อนจำนวน เช่น "ปูน 50 กก. ตราเพชรา 10 ถุง" ซึ่ง AI จัดการได้ดีกว่า
+- extension ออกใบเสนอราคาเป็นข้อความ agent ตัวอย่างมีหน้าสำหรับพิมพ์ แต่ยังไม่สร้างไฟล์ PDF บนเซิร์ฟเวอร์
 
 สิ่งที่ทดสอบแล้วและยังไม่ได้ทดสอบ อยู่ใน [README ของ extension](packages/eve#what-was-tested) และ [README ของตัวอย่าง](examples/thai-quotation-agent#what-was-tested)
 
@@ -149,9 +133,8 @@ agent ของ eve ใช้มากกว่านี้ต่อข้อค
 packages/core/                  ตัวกฎ: CSV การจับคู่ การตรวจร่าง การคิดเงิน (+ tests)
 packages/eve/                   extension ของ eve: เครื่องมือ คำสั่งสำหรับ agent และ desk API (+ tests)
 examples/thai-quotation-agent/  agent ของ eve พร้อมหน้าเว็บและช่องทาง Telegram เป็นโปรเจกต์แยก
-src/                            เว็บเดโม (Next.js)
-public/samples/                 แคตตาล็อกและข้อความสมมติ
-scripts/                        สคริปต์สำหรับลองข้อความตัวอย่างและ API ของเดโม
+samples/                        แคตตาล็อกและข้อความสมมติ ที่ test ใช้
+scripts/                        สคริปต์สำหรับลองข้อความตัวอย่าง
 ```
 
 ## การพัฒนา
@@ -161,11 +144,10 @@ scripts/                        สคริปต์สำหรับลอง
 | คำสั่ง | |
 |---|---|
 | `npm install` | ติดตั้งทั้ง workspace |
-| `npm run dev` | รันเว็บเดโม |
-| `npm test` | unit test ของกฎ extension และเดโม |
+| `npm test` | unit test ของกฎและ extension |
 | `npm run typecheck` · `npm run lint` | ตรวจ type และ lint |
 | `npm run build:eve` | build extension |
-| `npx tsx scripts/try-samples.ts` | ดูผลจับคู่ของข้อความตัวอย่างแต่ละไฟล์ แบบออฟไลน์ |
+| `npm run try-samples` | ดูผลจับคู่ของข้อความตัวอย่างแต่ละไฟล์ โดยไม่ใช้โมเดล |
 
 agent ตัวอย่างอยู่นอก workspace ให้รันคำสั่งจากในโฟลเดอร์ของมันเอง
 
@@ -180,7 +162,7 @@ agent ตัวอย่างอยู่นอก workspace ให้รัน
 ## ขอบคุณ
 
 - [eve](https://eve.dev) ของ Vercel ซึ่งเป็น framework ของ agent ที่ extension นี้สร้างมาใช้ด้วย
-- [Mintel UI](https://mintel-ui.vercel.app) theme และคอมโพเนนต์ของเว็บเดโมและตัวอย่าง ซึ่งสร้างบน [Radix UI](https://www.radix-ui.com) และ [shadcn/ui](https://ui.shadcn.com)
+- [Mintel UI](https://mintel-ui.vercel.app) theme และคอมโพเนนต์ของตัวอย่าง ซึ่งสร้างบน [Radix UI](https://www.radix-ui.com) และ [shadcn/ui](https://ui.shadcn.com)
 - [Next.js](https://nextjs.org), [AI SDK](https://ai-sdk.dev), [Zod](https://zod.dev), [Tailwind CSS](https://tailwindcss.com) และ [Vitest](https://vitest.dev)
 
 ## สัญญาอนุญาต

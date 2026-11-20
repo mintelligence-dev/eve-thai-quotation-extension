@@ -10,6 +10,10 @@ Changes that matter to people who install the packages or run the apps. The form
 
 ### Changed
 - The root README is in English, with the Thai version in `README.th.md`.
+- Sample catalogs and messages moved from `public/samples/` to `samples/`.
+
+### Removed
+- The original web demo (the Next.js app at the repository root, deployed at thai-quotation-copilot.vercel.app). The example agent replaces it: the same four steps, built on the extension. The demo's code is in the history up to the `web-demo-final` tag.
 
 ## eve 0.2.0 (2026-11-20)
 
@@ -40,4 +44,4 @@ First release on npm.
 
 ## Before the packages
 
-The web demo at <https://thai-quotation-copilot.vercel.app> came first: paste a message, review the draft in a table, approve, print or export. Its rules became `core`.
+A single-page web demo came first: paste a message, review the draft in a table, approve, print or export. Its rules became `core`.

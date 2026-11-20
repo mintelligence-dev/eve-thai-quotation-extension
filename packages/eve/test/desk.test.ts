@@ -8,7 +8,7 @@ import { DraftNotFoundError, openDesk } from "../extension/lib/desk";
 import { createDraft, emptyStore } from "../extension/lib/service";
 import { draftUrl, isToken, newToken, openStorage, toShared } from "../extension/lib/shared";
 
-const SAMPLES = join(__dirname, "..", "..", "..", "public", "samples");
+const SAMPLES = join(__dirname, "..", "..", "..", "samples");
 const csv = readFileSync(join(SAMPLES, "catalog-construction-th.csv"), "utf8");
 
 let dir: string;

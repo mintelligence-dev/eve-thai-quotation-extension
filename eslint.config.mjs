@@ -1,22 +1,29 @@
+import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import tseslint from "typescript-eslint";
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
+export default defineConfig([
   globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-    "packages/*/dist/**",
+    "**/dist/**",
+    "**/node_modules/**",
     "packages/*/.eve/**",
+    "packages/eve/r/**",
     // A project of its own, with its own dependencies and tooling.
     "examples/**",
   ]),
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    rules: {
+      // The CSV reader names the byte order mark it strips; the character is deliberate.
+      "no-irregular-whitespace": ["error", { skipRegExps: true, skipStrings: true, skipComments: true }],
+      // Two character classes in the Thai text normaliser escape more than they must. Harmless,
+      // and not worth changing a published regular expression for.
+      "no-useless-escape": "off",
+    },
+  },
+  {
+    files: ["**/*.mjs"],
+    languageOptions: { globals: { console: "readonly", process: "readonly" } },
+  },
 ]);
-
-export default eslintConfig;

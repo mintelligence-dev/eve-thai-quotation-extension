@@ -25,7 +25,7 @@ Needs Node 24 or newer.
 git clone https://github.com/mintelligence-dev/eve-thai-quotation-extension.git
 cd eve-thai-quotation-extension
 npm install
-npm run dev        # the web demo, http://localhost:3000
+npm test
 ```
 
 The repository is an npm workspace:
@@ -34,7 +34,7 @@ The repository is an npm workspace:
 |---|---|
 | `packages/core` | The rules. Plain TypeScript, no runtime dependencies. |
 | `packages/eve` | The eve extension. Build it with `npm run build:eve`. |
-| `src` | The web demo. |
+| `samples` | Made-up catalogs and messages the tests read. |
 | `examples/thai-quotation-agent` | A project of its own, outside the workspace. Run its commands from inside its folder. |
 
 ## Before you open a pull request
