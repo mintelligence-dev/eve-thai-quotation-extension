@@ -12,13 +12,23 @@ import { draftUrl, newToken, openStorage, toShared } from "./shared";
  */
 export const drafts = defineState<DraftStore>("drafts", emptyStore);
 
-export const settings = () => ({
-  vatRateBps: extension.config.vatRateBps,
-  pricesIncludeVat: extension.config.pricesIncludeVat,
+/** The VAT settings of a draft: its own when a person set them on the desk, else the configured ones. */
+export const settings = (stored?: Pick<StoredDraft, "vatRateBps" | "pricesIncludeVat">) => ({
+  vatRateBps: stored?.vatRateBps ?? extension.config.vatRateBps,
+  pricesIncludeVat: stored?.pricesIncludeVat ?? extension.config.pricesIncludeVat,
 });
 
-export const catalog = (signal?: AbortSignal) =>
-  loadCatalog(extension.config.catalog, { refreshSeconds: extension.config.refreshSeconds, signal });
+/** The shop's catalog: the one set through the desk when that is turned on and used, else the configured one. */
+export async function catalog(signal?: AbortSignal) {
+  const share = extension.config.sharing;
+  if (share?.managedCatalog) {
+    const storage = openStorage(share.storage);
+    const pointer = await storage.getShopCatalog();
+    const csv = pointer ? await storage.getCatalog(pointer.catalogId) : null;
+    if (csv !== null) return loadCatalog({ csv });
+  }
+  return loadCatalog(extension.config.catalog, { refreshSeconds: extension.config.refreshSeconds, signal });
+}
 
 /** An uploaded catalog, when the configuration allows drafts to be priced from one. */
 export async function uploadedCatalog(catalogId: string) {
@@ -62,7 +72,7 @@ export async function saveDrafts(store: DraftStore, draftId: string): Promise<Dr
 
 export async function view(store: DraftStore, draftId: string, signal?: AbortSignal): Promise<DraftView> {
   const stored = store.drafts[draftId];
-  const result = viewDraft(draftId, stored, await catalogFor(stored, signal), settings());
+  const result = viewDraft(draftId, stored, await catalogFor(stored, signal), settings(stored));
   const share = sharing();
   return share && stored.token ? { ...result, editUrl: draftUrl(share.baseUrl, stored.token) } : result;
 }

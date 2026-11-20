@@ -116,6 +116,8 @@ Read this before you use it:
 - **`dir` storage is one machine.** It suits local use and a server with a disk. On serverless hosting the folder is not shared between requests; a storage option for that does not exist yet.
 - **Last write wins.** Two people changing the same draft at the same moment can overwrite each other.
 - **Uploaded catalogs are off by default.** With `allowUploadedCatalogs: true` (in `sharing` and in `openDesk`), `desk.uploadCatalog(csv)` keeps a price list and returns a `catalogId`; `desk.create({ inquiry, catalogId })` or the `draft` tool's `catalogId` then prices a draft from it instead of your `catalog`. Whoever can upload then chooses the prices, so turn it on only for a demo or a page that only trusted staff reach.
+- **A stored shop catalog is off by default.** With `managedCatalog: true` (in `sharing` and in `openDesk`), `desk.setShopCatalog(csv, by)` replaces the shop's catalog, `desk.setShopPrice(sku, price, by)` changes one price, `desk.undoShopCatalog(by)` goes back one step, and `desk.shopCatalog()` / `desk.shopCatalogCsv()` read it. Once set, the stored catalog is used instead of `catalog`, by the agent's tools too. A file with errors is refused and nothing changes. Open drafts are priced from the new catalog the next time they are opened; issued quotations keep their prices. Guard these calls: they set your prices.
+- **Document details.** `desk.setDetails` also takes the quotation number, date, valid days, seller name and address, customer address, and a VAT rate and "prices include VAT" for that draft alone.
 - Tokens are 128 random bits. A draft stops opening `expiresDays` after it was made.
 
 ## What was tested

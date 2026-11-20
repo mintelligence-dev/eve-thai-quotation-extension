@@ -37,7 +37,7 @@ export default defineTool({
   async execute(input, ctx) {
     const current = await loadDrafts(input.draftId);
     const items = await catalogFor(current.drafts[input.draftId], ctx.abortSignal);
-    const { store, issued } = issueQuotation(current, input, items, settings(), {
+    const { store, issued } = issueQuotation(current, input, items, settings(current.drafts[input.draftId]), {
       validDays: extension.config.validDays,
       sellerName: extension.config.sellerName,
     });

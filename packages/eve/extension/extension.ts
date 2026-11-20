@@ -49,6 +49,12 @@ export default defineExtension({
          * the page that uploads is only for people you trust with that.
          */
         allowUploadedCatalogs: z.boolean().default(false),
+        /**
+         * Let the shop's catalog be replaced or edited through the desk after the agent is
+         * running. Once someone has done that, the stored catalog is used instead of `catalog`.
+         * Whoever can reach the desk's catalog calls sets the prices: guard them.
+         */
+        managedCatalog: z.boolean().default(false),
       })
       .optional(),
   }),

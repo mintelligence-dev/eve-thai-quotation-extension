@@ -5,6 +5,8 @@
  */
 import { createHash, randomBytes } from "node:crypto";
 
+import { formatAmount, type CatalogItem } from "@eve-thai-quotation-extension/core";
+
 import type { StoredDraft } from "./service";
 
 /** Where shared drafts are kept. `dir` is a folder of JSON files, for one machine or a mounted volume. */
@@ -25,6 +27,38 @@ export interface DraftStorage {
   getCatalog(catalogId: string): Promise<string | null>;
   /** Keeps an uploaded catalog and returns its id. The same text always gets the same id. */
   putCatalog(csv: string): Promise<string>;
+  /** Which kept catalog is the shop's own right now, or null when none was ever set. */
+  getShopCatalog(): Promise<ShopCatalogPointer | null>;
+  setShopCatalog(pointer: ShopCatalogPointer): Promise<void>;
+}
+
+export interface ShopCatalogPointer {
+  catalogId: string;
+  updatedAt: string;
+  /** Who changed it, as the caller named them. */
+  updatedBy: string;
+  /** The catalog before this change, so one step back is possible. */
+  previousCatalogId?: string;
+}
+
+const csvCell = (value: string): string => (/[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
+
+/** Writes catalog items back as CSV, in the columns the importer reads. */
+export function serializeCatalog(items: CatalogItem[]): string {
+  const rows = [
+    ["sku", "name", "name_en", "aliases", "unit", "unit_price", "category"],
+    ...items.map((item) => [
+      item.sku,
+      item.name,
+      item.nameEn ?? "",
+      item.aliases.join("|"),
+      item.unit,
+      // Plain digits: a thousands separator would not survive the next import in every tool.
+      formatAmount(item.unitPriceSatang).replace(/,/g, ""),
+      item.category ?? "",
+    ]),
+  ];
+  return rows.map((row) => row.map(csvCell).join(",")).join("\n") + "\n";
 }
 
 /** An uploaded catalog larger than this is refused. */
@@ -104,6 +138,26 @@ function dirStorage(dir: string): DraftStorage {
       await writeFile(temp, csv, "utf8");
       await rename(temp, target);
       return catalogId;
+    },
+    async getShopCatalog() {
+      const { readFile } = await import("node:fs/promises");
+      const { join } = await import("node:path");
+      try {
+        return JSON.parse(await readFile(join(dir, "shop-catalog.json"), "utf8")) as ShopCatalogPointer;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+        throw error;
+      }
+    },
+    async setShopCatalog(pointer) {
+      if (!isCatalogId(pointer.catalogId)) throw new Error("Not a catalog id.");
+      const { mkdir, rename, writeFile } = await import("node:fs/promises");
+      const { join } = await import("node:path");
+      await mkdir(dir, { recursive: true });
+      const target = join(dir, "shop-catalog.json");
+      const temp = `${target}.${randomBytes(4).toString("hex")}.tmp`;
+      await writeFile(temp, JSON.stringify(pointer), "utf8");
+      await rename(temp, target);
     },
   };
 }
