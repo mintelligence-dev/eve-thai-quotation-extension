@@ -3,6 +3,7 @@
 > AI ช่วยร่างใบเสนอราคาจากข้อความลูกค้า โดยใช้แคตตาล็อกและราคาของบริษัทเอง  
 > Turn Thai or English customer inquiries into quotation drafts from your own catalog.
 
+[![CI](https://github.com/mintelligence-dev/eve-thai-quotation-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/mintelligence-dev/eve-thai-quotation-extension/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![AI SDK](https://img.shields.io/badge/AI%20SDK-7-black?logo=vercel)](https://ai-sdk.dev)
@@ -11,6 +12,14 @@
 **Demo:** <https://thai-quotation-copilot.vercel.app> · [ภาษาไทย](#ภาษาไทย) · [English](#english)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension&project-name=thai-quotation-copilot&repository-name=thai-quotation-copilot&env=AI_GATEWAY_API_KEY&envDescription=AI%20Gateway%20API%20key%3A%20Vercel%20dashboard%20%3E%20AI%20Gateway%20%3E%20API%20Keys%20%3E%20Create%20key&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fai-gateway%2Fauthentication)
+
+[![A customer message turned into a priced quotation draft](docs/screenshot-draft.png)](https://thai-quotation-copilot.vercel.app)
+
+*ข้อความลูกค้าไทยปนอังกฤษ กลายเป็นร่างใบเสนอราคาที่ราคามาจากแคตตาล็อก · A mixed Thai and English inquiry becomes a draft priced from the catalog.*
+
+![Ambiguous and incomplete lines are flagged, with questions to send back to the customer](docs/screenshot-review.png)
+
+*รายการที่กำกวมหรือข้อมูลไม่ครบถูกชี้ให้คนตัดสิน พร้อมคำถามที่คัดลอกไปถามลูกค้าได้ · Ambiguous or incomplete lines are left to a person, with questions ready to copy.*
 
 ---
 
