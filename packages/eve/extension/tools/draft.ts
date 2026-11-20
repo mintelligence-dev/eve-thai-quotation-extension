@@ -1,8 +1,8 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
 
-import { createDraft, viewDraft } from "../lib/service";
-import { catalog, drafts, settings } from "../lib/session";
+import { createDraft } from "../lib/service";
+import { catalog, loadDrafts, saveDrafts, view } from "../lib/session";
 
 export default defineTool({
   description:
@@ -24,8 +24,7 @@ export default defineTool({
   }),
   async execute(input, ctx) {
     const items = await catalog(ctx.abortSignal);
-    const { store, draftId } = await createDraft(drafts.get(), input, items);
-    drafts.update(() => store);
-    return viewDraft(draftId, store.drafts[draftId], items, settings());
+    const { store, draftId } = await createDraft(await loadDrafts(), input, items);
+    return view(await saveDrafts(store, draftId), draftId, ctx.abortSignal);
   },
 });

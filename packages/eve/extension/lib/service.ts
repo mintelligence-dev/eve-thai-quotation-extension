@@ -33,6 +33,14 @@ export interface StoredDraft {
   draft: QuotationDraft;
   /** Set once the quotation has been issued; an issued draft can no longer be changed. */
   issuedAs: string | null;
+  /** The key of this draft in shared storage, when drafts are shared. Also the last part of its link. */
+  token?: string;
+  /** The customer's message the draft was made from. */
+  inquiry?: string;
+  customerName?: string;
+  notes?: string;
+  /** The issued quotation, kept so a shared draft can show and export it later. */
+  issued?: IssuedQuotation;
 }
 
 export interface DraftStore {
@@ -62,6 +70,8 @@ export interface LineView {
   lineTotal: string | null;
   /** What still has to be settled on this line, in words. */
   problems: string[];
+  /** The same problems as codes, in the same order, for a page that words them itself. */
+  problemCodes: DraftIssue["kind"][];
   /** Items the customer may have meant. Choose one of these, or use the search tool. */
   candidates: ItemView[];
 }
@@ -78,6 +88,8 @@ export interface DraftView {
   /** Pass `grandTotal` to the issue tool exactly as written here. */
   totals: { subtotal: string; vat: string; vatRate: string; grandTotal: string };
   issuedAs: string | null;
+  /** Where a person can open this draft in a table and change it. Present when drafts are shared. */
+  editUrl?: string;
 }
 
 const toItemView = (item: CatalogItem): ItemView => ({ sku: item.sku, name: item.name, unit: item.unit });
@@ -120,6 +132,7 @@ export function viewDraft(
         unitPrice: item ? formatAmount(item.unitPriceSatang) : null,
         lineTotal: item && line.quantity ? formatAmount(totals.lineTotals[i]) : null,
         problems: line.issues.map(problemText),
+        problemCodes: line.issues.map((issue) => issue.kind),
         candidates: line.candidates
           .map((c) => bySku.get(c.sku))
           .filter((x): x is CatalogItem => Boolean(x))
@@ -179,7 +192,10 @@ export async function createDraft(
     draft = await buildDraft({ inquiry: input.inquiry, catalog });
   }
   const draftId = `D${store.next}`;
-  return { store: put({ ...store, next: store.next + 1 }, draftId, { draft, issuedAs: null }), draftId };
+  return {
+    store: put({ ...store, next: store.next + 1 }, draftId, { draft, issuedAs: null, inquiry: input.inquiry }),
+    draftId,
+  };
 }
 
 export interface LineChange {
@@ -220,7 +236,7 @@ export function reviseDraft(store: DraftStore, draftId: string, revision: Revisi
     if (change.confirmUnit) draft = acknowledgeUnit(draft, change.lineId);
   }
   for (const extra of revision.add ?? []) draft = addLine(draft, item(extra.sku), extra.quantity);
-  return put(store, draftId, { draft, issuedAs: null });
+  return put(store, draftId, { ...stored, draft, issuedAs: null });
 }
 
 export function searchCatalog(query: string, catalog: CatalogItem[], limit = 8): ItemView[] {
@@ -245,6 +261,8 @@ export interface IssuedQuotation {
   validDays: number;
   customerName: string;
   quotation: PricedQuotation;
+  notes: string;
+  sellerName: string;
   /** The quotation as text, ready to send to the customer. */
   text: string;
 }
@@ -265,8 +283,8 @@ const dateParts = (now: Date) => {
   return { date: `${get("year")}-${get("month")}-${get("day")}`, time: `${get("hour")}${get("minute")}${get("second")}` };
 };
 
-export function renderQuotation(q: Omit<IssuedQuotation, "text">, sellerName: string, notes: string): string {
-  const { quotation } = q;
+export function renderQuotation(q: Omit<IssuedQuotation, "text">): string {
+  const { quotation, sellerName, notes } = q;
   const thaiDate = new Date(`${q.date}T00:00:00+07:00`).toLocaleDateString("th-TH", {
     timeZone: "Asia/Bangkok",
     year: "numeric",
@@ -320,7 +338,15 @@ export function issueQuotation(
 
   const { date, time } = dateParts(options.now ?? new Date());
   const quoteNo = `QT-${date.replace(/-/g, "")}-${time}`;
-  const base = { quoteNo, date, validDays: options.validDays, customerName: input.customerName?.trim() ?? "", quotation };
-  const issued: IssuedQuotation = { ...base, text: renderQuotation(base, options.sellerName, input.notes?.trim() ?? "") };
-  return { store: put(store, input.draftId, { draft: stored.draft, issuedAs: quoteNo }), issued };
+  const base = {
+    quoteNo,
+    date,
+    validDays: options.validDays,
+    customerName: (input.customerName ?? stored.customerName ?? "").trim(),
+    notes: (input.notes ?? stored.notes ?? "").trim(),
+    sellerName: options.sellerName,
+    quotation,
+  };
+  const issued: IssuedQuotation = { ...base, text: renderQuotation(base) };
+  return { store: put(store, input.draftId, { ...stored, issuedAs: quoteNo, issued }), issued };
 }

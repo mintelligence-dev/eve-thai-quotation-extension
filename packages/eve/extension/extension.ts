@@ -30,5 +30,20 @@ export default defineExtension({
     refreshSeconds: z.number().int().min(0).max(86_400).default(300),
     /** Shown at the top of an issued quotation. */
     sellerName: z.string().default(""),
+    /**
+     * Keep drafts outside the conversation and give each one a link, so a person can open the
+     * draft on a web page (see the `desk` export) and change it there. Leave out to keep drafts
+     * in the conversation only. Anyone who holds a draft's link can read and change that draft.
+     */
+    sharing: z
+      .object({
+        /** Where drafts are kept. `dir` is a folder of JSON files. */
+        storage: z.object({ dir: z.string().min(1) }),
+        /** The address of the web page; a draft's link is `<baseUrl>/q/<token>`. */
+        baseUrl: z.string().url(),
+        /** How many days a draft's link works, counted from when the draft was made. */
+        expiresDays: z.number().int().min(1).max(365).default(30),
+      })
+      .optional(),
   }),
 });

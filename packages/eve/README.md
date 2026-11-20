@@ -72,6 +72,7 @@ eve add https://cdn.jsdelivr.net/npm/@eve-thai-quotation-extension/eve/r/quotati
 | `validDays` | `30` | How long the quoted prices stay valid |
 | `refreshSeconds` | `300` | How long a catalog fetched from `url` is kept |
 | `sellerName` | `""` | Shown at the top of the quotation |
+| `sharing` | off | Keep drafts outside the conversation and give each one a link. See [Edit a draft on a web page](#edit-a-draft-on-a-web-page) |
 
 The catalog format is the same as the web app's: `sku, name, unit, unit_price` are required, `name_en, aliases, category` are optional, and `aliases` are separated by `|`. Good aliases are the biggest accuracy lever.
 
@@ -79,6 +80,42 @@ The catalog format is the same as the web app's: `sku, name, unit, unit_price` a
 
 - **`{ by: "requester" }`**: the person talking to the agent approves. Use it only for an agent your own staff talk to. On a customer-facing channel the requester is the customer, who would be approving their own quotation.
 - **`{ by: "approvers", principals: [...] }`**: only these people can approve. The ID is the `principalId` your channel gives the person who answers (for Slack, `slack:<team>:<user>`). How an approval request reaches those people depends on the channel; see eve's channel docs.
+
+## Edit a draft on a web page
+
+By default a draft lives in the conversation. With `sharing`, each draft is also kept in a folder and gets a link, so a person can open the same draft in a table, change it, and approve it there. The agent hands out the link and reads the draft again before it issues.
+
+```ts
+quotation({
+  // ...
+  sharing: {
+    storage: { dir: ".data/drafts" },      // a folder of JSON files
+    baseUrl: "https://quotes.example.com", // a draft's link is <baseUrl>/q/<token>
+    expiresDays: 30,
+  },
+});
+```
+
+The page is yours to build. The `desk` export gives it the same rules the tools use, with no model involved:
+
+```ts
+import { openDesk } from "@eve-thai-quotation-extension/eve/desk";
+
+const desk = openDesk({ catalog, storage: { dir: ".data/drafts" }, sellerName: "..." });
+
+await desk.read(token);                                   // the draft, as the tools show it
+await desk.revise(token, { changes: [{ lineId, sku }] }); // same changes as the revise tool
+await desk.search("ท่อ pvc");
+await desk.setDetails(token, { customerName, notes });
+await desk.issue(token, { grandTotal });                  // refuses if the total changed
+```
+
+Read this before you use it:
+
+- **The link is the key.** Anyone who holds a draft's link can read it, and anyone who can reach your page's `issue` call can issue it. Calling `desk.issue` is the approval; the `approval` setting only covers the agent's `issue` tool. Put your own sign-in in front of the page when the link may travel beyond the people allowed to approve.
+- **`dir` storage is one machine.** It suits local use and a server with a disk. On serverless hosting the folder is not shared between requests; a storage option for that does not exist yet.
+- **Last write wins.** Two people changing the same draft at the same moment can overwrite each other.
+- Tokens are 128 random bits. A draft stops opening `expiresDays` after it was made.
 
 ## What was tested
 
@@ -89,6 +126,8 @@ In a local `eve dev` agent on eve 1.1.0 with `anthropic/claude-haiku-5.5`, over 
 - `approvers` with a principal that did not match: the approval was refused and stayed open.
 
 The rules behind the tools have unit tests (`packages/eve/test`).
+
+Shared drafts and the `desk` export (0.2.0) were run locally with a Next.js page beside the agent: paste a message, change lines in a table, approve, print. Issuing from chat after a change on the page was not tried, and neither was any of this on a deployed agent.
 
 `eve add` was run against the published 0.1.0 packages in a fresh `eve init` agent: it installed the package, wrote the two files, and the agent drafted and, after approval, issued a quotation.
 

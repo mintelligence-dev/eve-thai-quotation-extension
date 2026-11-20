@@ -17,4 +17,8 @@ export default quotation({
   // vatRateBps: 700,          // 7%
   // pricesIncludeVat: false,
   // validDays: 30,
+
+  // Give each draft a link that opens it on your own web page (see the README, "Edit a draft
+  // on a web page"). Anyone who holds the link can read and change that draft.
+  // sharing: { storage: { dir: ".data/drafts" }, baseUrl: "https://your-site.example" },
 });
