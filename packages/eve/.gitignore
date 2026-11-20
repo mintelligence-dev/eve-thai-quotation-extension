@@ -1,9 +1,6 @@
 node_modules
 .env*
 .eve
-.vercel
-.output
-.nitro
 dist
-.DS_Store
+r
 *.tsbuildinfo

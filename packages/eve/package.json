@@ -2,7 +2,14 @@
   "name": "@eve-thai-quotation-extension/eve",
   "version": "0.1.0",
   "description": "eve extension: draft Thai and English quotations from a customer message, priced from your own catalog, issued only after a person approves.",
-  "keywords": ["quotation", "thai", "eve", "agent", "catalog", "pricing"],
+  "keywords": [
+    "quotation",
+    "thai",
+    "eve",
+    "agent",
+    "catalog",
+    "pricing"
+  ],
   "license": "MIT",
   "author": "M Intelligence",
   "repository": {
@@ -17,7 +24,11 @@
       "dist": "./dist/extension"
     }
   },
-  "files": ["dist", "r", "README.md"],
+  "files": [
+    "dist",
+    "r",
+    "README.md"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -29,7 +40,7 @@
     }
   },
   "scripts": {
-    "build": "eve extension build",
+    "build": "eve extension build && node scripts/build-registry.mjs",
     "typecheck": "tsc"
   },
   "dependencies": {

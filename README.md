@@ -17,6 +17,15 @@
 
 *ข้อความลูกค้ากลายเป็นร่างใบเสนอราคาที่ราคามาจากแคตตาล็อก รายการที่กำกวมหรือข้อมูลไม่ครบถูกชี้ให้คนตัดสิน พร้อมคำถามที่คัดลอกไปถามลูกค้าได้ · A customer message becomes a draft priced from the catalog; ambiguous or incomplete lines are left to a person, with questions ready to copy.*
 
+## สองทางใช้ · Two ways to use it
+
+| | ทำอะไร · What it is | สถานะ · Status |
+|---|---|---|
+| **เว็บแอป · Web app** | พนักงานแปะข้อความลูกค้า ตรวจร่าง อนุมัติ แล้วพิมพ์ · Staff paste a message, review the draft, approve and print | ใช้งานได้ · live: [demo](https://thai-quotation-copilot.vercel.app) |
+| **[eve extension](packages/eve)** | ให้ AI agent ที่สร้างด้วย [eve](https://eve.dev) ร่างใบเสนอราคาในแชต และรอคนอนุมัติก่อนออก · Lets an eve agent draft quotations in chat and wait for a person's approval | 0.1 · ทดสอบในเครื่องแล้ว ยังไม่ได้เผยแพร่บน npm · tested locally, not on npm yet |
+
+ทั้งสองทางใช้กฎชุดเดียวกันจาก [`packages/core`](packages/core): ราคามาจากแคตตาล็อกเท่านั้น และต้องมีคนอนุมัติก่อนส่งออก · Both run the same rules from `packages/core`: prices only come from the catalog, and a person approves before anything goes out.
+
 ---
 
 ## ภาษาไทย
@@ -103,11 +112,11 @@ npm run dev                  # http://localhost:3000
 
 ### ใช้โมดูลจับคู่ในโปรเจกต์อื่น
 
-`src/lib/quotation/` เป็น TypeScript ล้วน ไม่ขึ้นกับ Next.js หรือ React ส่วนที่เรียก AI แยกอยู่ใน `llm.ts`
+[`packages/core`](packages/core) (`@eve-thai-quotation-extension/core`) เป็น TypeScript ล้วน ไม่ขึ้นกับ Next.js หรือ React ส่วนที่เรียก AI แยกอยู่ใน `llm.ts` ทั้งเว็บแอปและ eve extension ใช้โมดูลนี้ตัวเดียวกัน (ยังไม่ได้เผยแพร่บน npm)
 
 ```ts
-import { buildDraft, canApprove, chooseItem, parseCatalogCsv, priceQuotation } from "./src/lib/quotation";
-import { createLlmExtractor, createLlmSelector } from "./src/lib/quotation/llm";
+import { buildDraft, canApprove, chooseItem, parseCatalogCsv, priceQuotation } from "@eve-thai-quotation-extension/core";
+import { createLlmExtractor, createLlmSelector } from "@eve-thai-quotation-extension/core/llm";
 
 const { items: catalog, errors } = parseCatalogCsv(csvText);
 const draft = await buildDraft({
@@ -212,12 +221,13 @@ See the Thai table above. The required columns are `sku, name, unit, unit_price`
 
 ### Reusing the matching module
 
-`src/lib/quotation/` is plain TypeScript with no Next.js or React dependency. The model-backed parts live in `llm.ts` and are injected as `LineExtractor` and `MatchSelector` interfaces. See the code sample in the Thai section.
+[`packages/core`](packages/core) (`@eve-thai-quotation-extension/core`) is plain TypeScript with no Next.js or React dependency, shared by the web app and the eve extension (not on npm yet). The model-backed parts live in `llm.ts` and are injected as `LineExtractor` and `MatchSelector` interfaces. See the code sample in the Thai section.
 
 ### Project layout
 
 ```
-src/lib/quotation/      core module (CSV, matching, pipeline, review, money) + tests
+packages/core/          core module (CSV, matching, pipeline, review, money) + tests
+packages/eve/           eve extension: draft, search, revise and issue tools for an agent
 src/lib/server/ai.ts    picks AI vs offline engine
 src/app/api/extract     inquiry → requested lines
 src/app/api/select      shortlists → item selections (no prices)

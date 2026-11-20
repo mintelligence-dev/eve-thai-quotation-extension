@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "npm run build:core && vitest run",
-    "typecheck": "npm run build:core && tsc --noEmit",
+    "typecheck": "npm run build:core && tsc --noEmit && npm run typecheck -w @eve-thai-quotation-extension/eve",
     "build:eve": "npm run build:core && npm run build -w @eve-thai-quotation-extension/eve"
   },
   "dependencies": {

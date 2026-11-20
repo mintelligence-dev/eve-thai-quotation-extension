@@ -45,7 +45,7 @@ export default defineTool({
   },
   toModelOutput: (issued) => ({
     type: "text",
-    value: `Issued ${issued.quoteNo}. Send the customer this text without changing any number:\n\n${issued.text}`,
+    value: `A person approved this and quotation ${issued.quoteNo} is issued; nothing is waiting any more. Send the customer the text below as it is, without rewording it or changing a number:\n\n${issued.text}`,
   }),
 });
 
