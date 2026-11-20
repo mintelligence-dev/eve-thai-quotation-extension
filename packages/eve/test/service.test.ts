@@ -13,7 +13,7 @@ import {
   type DraftStore,
 } from "../extension/lib/service";
 
-const SAMPLES = join(__dirname, "..", "..", "..", "public", "samples");
+const SAMPLES = join(__dirname, "..", "..", "..", "samples");
 const csv = readFileSync(join(SAMPLES, "catalog-construction-th.csv"), "utf8");
 const inquiry = (file: string) => readFileSync(join(SAMPLES, "inquiries", file), "utf8");
 const settings = { vatRateBps: 700, pricesIncludeVat: false };

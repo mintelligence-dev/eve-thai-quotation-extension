@@ -10,7 +10,7 @@ Turn a customer's message, in Thai or English, into a quotation priced from your
 
 **English** · [ภาษาไทย](README.th.md)
 
-[![A customer message turned into a quotation draft, with unclear lines flagged for review](docs/screenshot.png)](https://thai-quotation-copilot.vercel.app)
+[![A draft quotation made from a customer's message, ready for a person to check and approve](docs/screenshot.png)](https://thai-quotation-agent.vercel.app)
 
 ## What is in this repository
 
@@ -19,9 +19,7 @@ Turn a customer's message, in Thai or English, into a quotation priced from your
 | [`packages/eve`](packages/eve) | An extension for [eve](https://eve.dev) agents: tools to draft, search, revise and issue a quotation, with approval before issuing | Any channel your eve agent has: Telegram, Slack, web chat and others | `eve add` (see [Quick start](#quick-start)) |
 | [`packages/core`](packages/core) | The rules on their own: catalog import, Thai and English matching, review checks, pricing. No framework, no runtime dependencies | Any TypeScript project | `npm install @eve-thai-quotation-extension/core` |
 | [`examples/thai-quotation-agent`](examples/thai-quotation-agent) | A complete agent built with the extension: a web page and a Telegram bot working on the same drafts and the same catalog | Web and Telegram | [thai-quotation-agent.vercel.app](https://thai-quotation-agent.vercel.app) |
-| Web demo (repository root) | The original single-page app. The catalog stays in the browser; it does not use eve | Web only | [thai-quotation-copilot.vercel.app](https://thai-quotation-copilot.vercel.app) |
-
-All four price with the same code in `packages/core`.
+All three price with the same code in `packages/core`.
 
 ## How it works
 
@@ -38,9 +36,9 @@ All four price with the same code in `packages/core`.
 | Prices only come from the catalog | The model's output has no price field. Prices are looked up by SKU in one place, `priceQuotation()`. |
 | No invented products | The model may only answer with a SKU from that line's shortlist. Anything else is rejected and the line goes back to the reviewer. |
 | A person approves | A draft can be approved only when every line has an item and a quantity and unit mismatches are confirmed. In the extension, issuing is a tool call that eve pauses for approval, and it is refused if the total changed after the approver saw it. |
-| Sample data is made up | All catalogs, brands and messages under `public/samples/` are fictional. |
+| Sample data is made up | All catalogs, brands and messages under `samples/` are fictional. |
 
-Each part says what it keeps and where: the web demo keeps the catalog in the browser, while the extension and the example agent keep drafts on the server. See each README before putting real prices in.
+With `sharing` on, the extension keeps drafts in storage, and the example agent does the same on the server. Read the [extension README](packages/eve) and the [example's README](examples/thai-quotation-agent#who-can-do-what) before putting real prices in.
 
 ## Quick start
 
@@ -75,23 +73,9 @@ if (canApprove(draft, catalog).ok) {
 
 Without a model, `buildDraft` reads the message with built-in rules. To use a model, pass `createLlmExtractor` and `createLlmSelector` from `@eve-thai-quotation-extension/core/llm`.
 
-### Run the web demo
+### Run the example
 
-```bash
-npm install
-cp .env.example .env.local   # optionally set AI_GATEWAY_API_KEY
-npm run dev                  # http://localhost:3000
-```
-
-- **No key:** the demo runs in offline mode with rule-based matching (Thai word segmentation with `Intl.Segmenter`, fuzzy matching and aliases), at no cost.
-- **With an [AI Gateway](https://vercel.com/docs/ai-gateway) key:** a model reads the message, which copes better with messy text. If a model call fails, the demo falls back to offline matching and says so.
-- **On a linked Vercel project:** `vercel env pull .env.local` gives a short-lived `VERCEL_OIDC_TOKEN` instead of a key.
-
-A switch at the top right chooses "AI" or "no AI" per draft. `QUOTATION_AI_MODE=offline` turns AI off for everyone, and `QUOTATION_MODEL` changes the model.
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension&project-name=thai-quotation-copilot&repository-name=thai-quotation-copilot&env=AI_GATEWAY_API_KEY&envDescription=AI%20Gateway%20API%20key%3A%20Vercel%20dashboard%20%3E%20AI%20Gateway%20%3E%20API%20Keys%20%3E%20Create%20key&envLink=https%3A%2F%2Fvercel.com%2Fdocs%2Fai-gateway%2Fauthentication)
-
-The button deploys the web demo only. The demo has no login, so anyone who can reach your copy can use its AI at your cost: set a spending limit on the key and a rate limit in front of `/api/extract` and `/api/select`. See [SECURITY.md](SECURITY.md).
+The [example agent](examples/thai-quotation-agent) has a web page and a Telegram bot. Its README covers running it locally, deploying it to Vercel, and who can do what on a deployment.
 
 ## Catalog format
 
@@ -120,9 +104,9 @@ The button deploys the web demo only. The demo has no login, so anyone who can r
 
 ## Costs
 
-**Hosting.** The web demo is one static page and two short API functions. The Hobby plan is enough to try it; commercial use needs Pro. See <https://vercel.com/pricing>.
+The rules in `core` cost nothing to run. A model is paid per token, for example through [AI Gateway](https://vercel.com/docs/ai-gateway).
 
-**Model.** You pay per token through AI Gateway. The web demo makes two calls per message: one to read the lines and one to choose items. From the real prompt size of a 6-line sample (about 3,400 characters plus schemas) we estimate about 3,000 input and 800 output tokens per message. This was not measured from live calls, and Thai uses more tokens per character than English.
+With `core`'s own extractor and selector, one message takes two model calls: one to read the lines and one to choose items. From the real prompt size of a 6-line sample (about 3,400 characters plus schemas) we estimate about 3,000 input and 800 output tokens per message. This was not measured from live calls, and Thai uses more tokens per character than English.
 
 | Model | Input / output per 1M tokens* | About, per message |
 |---|---|---|
@@ -138,8 +122,8 @@ An eve agent uses more than this per message, because it takes several model tur
 
 - No unit conversion (box ↔ piece). A unit mismatch is flagged for a person to confirm.
 - No discounts or tiered prices.
-- Offline matching can misread a line where a spec with a unit comes before the quantity, such as "ปูน 50 กก. ตราเพชรา 10 ถุง". A model handles that better.
-- The extension issues the quotation as text. A printable page exists in the web demo and the example agent; neither makes a PDF on the server.
+- Matching without a model can misread a line where a spec with a unit comes before the quantity, such as "ปูน 50 กก. ตราเพชรา 10 ถุง". A model handles that better.
+- The extension issues the quotation as text. The example agent has a printable page; it does not make a PDF on the server.
 
 What was and was not tested is listed in the [extension README](packages/eve#what-was-tested) and the [example's README](examples/thai-quotation-agent#what-was-tested).
 
@@ -149,9 +133,8 @@ What was and was not tested is listed in the [extension README](packages/eve#wha
 packages/core/                  the rules: CSV, matching, review, money (+ tests)
 packages/eve/                   the eve extension: tools, instructions, desk API (+ tests)
 examples/thai-quotation-agent/  an eve agent with a web page and a Telegram channel; a project of its own
-src/                            the web demo (Next.js)
-public/samples/                 fictional catalogs and messages
-scripts/                        small scripts for trying samples and the demo's API
+samples/                        fictional catalogs and messages, used by the tests
+scripts/                        a script for trying the samples
 ```
 
 ## Development
@@ -161,11 +144,10 @@ Needs Node 24 or newer.
 | Command | |
 |---|---|
 | `npm install` | Install everything in the workspace |
-| `npm run dev` | Run the web demo |
-| `npm test` | Unit tests for the rules, the extension and the demo |
+| `npm test` | Unit tests for the rules and the extension |
 | `npm run typecheck` · `npm run lint` | Type and lint checks |
 | `npm run build:eve` | Build the extension |
-| `npx tsx scripts/try-samples.ts` | Show how each sample message matches, offline |
+| `npm run try-samples` | Show how each sample message matches, without a model |
 
 The example agent is outside the workspace: run its commands from inside its folder.
 
@@ -180,7 +162,7 @@ Changes in each release are in [CHANGELOG.md](CHANGELOG.md).
 ## Credits
 
 - [eve](https://eve.dev) by Vercel, the agent framework the extension is built for.
-- [Mintel UI](https://mintel-ui.vercel.app), the theme and components of the web demo and the example, on [Radix UI](https://www.radix-ui.com) and [shadcn/ui](https://ui.shadcn.com).
+- [Mintel UI](https://mintel-ui.vercel.app), the theme and components of the example, on [Radix UI](https://www.radix-ui.com) and [shadcn/ui](https://ui.shadcn.com).
 - [Next.js](https://nextjs.org), [AI SDK](https://ai-sdk.dev), [Zod](https://zod.dev), [Tailwind CSS](https://tailwindcss.com) and [Vitest](https://vitest.dev).
 
 ## License

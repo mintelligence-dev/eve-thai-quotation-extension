@@ -91,7 +91,7 @@ Read this before you put real prices or customers into a deployment.
 
 On the deployed site, in a browser: a mixed Thai and English message in "AI" mode produced six matched lines; document details were saved; approving produced quotation `QT-20261120-191257` with the right total. The catalog page asks for the password, the agent's session route refuses outside callers, and the Telegram route refuses a request without the secret.
 
-Locally: "no AI" mode against the original web app's samples gave the same lines, statuses and questions; changing a price on `/catalog`; the storage layer against the real private Blob store.
+Locally: "no AI" mode gave the same lines, statuses and questions as the earlier web demo on its samples; changing a price on `/catalog`; the storage layer against the real private Blob store.
 
 Not tested: a real conversation with the Telegram bot on the deployment, the Telegram admin commands as a real admin, uploading a CSV file through the button, printing, the downloaded CSV, phones, dark mode on the reworked pages, and the spending cap actually stopping requests.
 

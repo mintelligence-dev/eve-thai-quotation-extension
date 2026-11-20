@@ -74,7 +74,7 @@ eve add https://cdn.jsdelivr.net/npm/@eve-thai-quotation-extension/eve/r/quotati
 | `sellerName` | `""` | Shown at the top of the quotation |
 | `sharing` | off | Keep drafts outside the conversation and give each one a link. See [Edit a draft on a web page](#edit-a-draft-on-a-web-page) |
 
-The catalog format is the same as the web app's: `sku, name, unit, unit_price` are required, `name_en, aliases, category` are optional, and `aliases` are separated by `|`. Good aliases are the biggest accuracy lever.
+The catalog is a CSV file: `sku, name, unit, unit_price` are required, `name_en, aliases, category` are optional, and `aliases` are separated by `|`. Good aliases are the biggest accuracy lever.
 
 ### Who approves
 
@@ -124,7 +124,7 @@ Read this before you use it:
 
 In a local `eve dev` agent on eve 1.1.0 with `anthropic/claude-haiku-5.5`, over eve's HTTP channel:
 
-- An ambiguous Thai inquiry: the agent called `draft`, asked the customer the four open questions, then after the answers called `revise` and `issue`; the run paused with the approval prompt, and after approval returned the quotation (8,517.20 THB, matching the web app's arithmetic).
+- An ambiguous Thai inquiry: the agent called `draft`, asked the customer the four open questions, then after the answers called `revise` and `issue`; the run paused with the approval prompt, and after approval returned the quotation (8,517.20 THB, which is the right total).
 - Denying the approval: `issue` did not run, and the agent told the customer the quotation was not approved.
 - `approvers` with a principal that did not match: the approval was refused and stayed open.
 
@@ -139,7 +139,7 @@ Shared drafts and the `desk` export (0.2.0) were run with a Next.js page beside 
 ## Known limits
 
 - Drafts live in the session. They are gone when the conversation ends, and one conversation keeps at most 20.
-- The quotation is text. There is no PDF; the web app in this repository prints one.
+- The quotation is text. There is no PDF; the [example agent](../../examples/thai-quotation-agent) has a page that prints one.
 - No unit conversion, discounts or tiered prices, the same as the core module.
 - The built-in reading of a message is rule-based. The agent's own model reads messy messages better, which is why `draft` also accepts the lines as the model understood them.
 

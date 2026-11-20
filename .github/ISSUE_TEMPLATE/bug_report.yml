@@ -10,7 +10,6 @@ body:
         - eve extension (packages/eve)
         - Core rules (packages/core)
         - Example agent (examples/thai-quotation-agent)
-        - Web demo
         - Docs
     validations:
       required: true

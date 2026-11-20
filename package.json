@@ -1,50 +1,33 @@
 {
-  "name": "thai-quotation-copilot",
-  "version": "0.1.0",
+  "name": "eve-thai-quotation-extension",
+  "version": "0.2.0",
   "private": true,
-  "scripts": {
-    "dev": "npm run build:core && next dev",
-    "build:core": "npm run build -w @eve-thai-quotation-extension/core",
-    "build": "npm run build:core && next build",
-    "start": "next start",
-    "lint": "eslint",
-    "test": "npm run build:core && vitest run",
-    "typecheck": "npm run build:core && tsc --noEmit && npm run typecheck -w @eve-thai-quotation-extension/eve",
-    "build:eve": "npm run build:core && npm run build -w @eve-thai-quotation-extension/eve"
-  },
-  "dependencies": {
-    "@eve-thai-quotation-extension/core": "*",
-    "@radix-ui/react-checkbox": "^1.4.1",
-    "@radix-ui/react-label": "^2.1.17",
-    "@radix-ui/react-popover": "^1.3.1",
-    "@radix-ui/react-slot": "^1.5.0",
-    "ai": "^7.0.148",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.76.0",
-    "motion": "^14.14.0",
-    "next": "16.4.6",
-    "react": "19.3.0",
-    "react-day-picker": "^10.0.2",
-    "react-dom": "19.3.0",
-    "server-only": "^0.0.1",
-    "tailwind-merge": "^3.7.1",
-    "tw-animate-css": "^1.4.0",
-    "zod": "^4.6.7"
-  },
-  "devDependencies": {
-    "@tailwindcss/turbopack": "^4",
-    "@types/node": "^24.19.2",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.4.6",
-    "tailwindcss": "^4",
-    "typescript": "^5",
-    "vitest": "^5.0.5"
-  },
+  "description": "Workspace for @eve-thai-quotation-extension/core and @eve-thai-quotation-extension/eve.",
   "license": "MIT",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "build:core": "npm run build -w @eve-thai-quotation-extension/core",
+    "build:eve": "npm run build:core && npm run build -w @eve-thai-quotation-extension/eve",
+    "build": "npm run build:eve",
+    "test": "npm run build:core && vitest run",
+    "typecheck": "npm run build:core && tsc --noEmit && npm run typecheck -w @eve-thai-quotation-extension/eve",
+    "lint": "eslint",
+    "try-samples": "npm run build:core && tsx scripts/try-samples.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@types/node": "^24.19.2",
+    "ai": "^7.0.148",
+    "eslint": "^9",
+    "tsx": "^4",
+    "typescript": "^5",
+    "typescript-eslint": "^8",
+    "vitest": "^5.0.5",
+    "zod": "^4.6.7"
+  },
+  "engines": {
+    "node": ">=24"
+  }
 }
