@@ -10,7 +10,7 @@ Approver sees   Issue quotation for draft D1 to ร้านสมชายก�
 Customer gets   ใบเสนอราคา QT-20261120-125255 … รวมทั้งสิ้น 8,517.20 บาท
 ```
 
-**Status: 0.1, on npm.** It was run end to end in a local eve 1.1.0 agent (see [What was tested](#what-was-tested)). It has not been deployed, and not tried on LINE, Slack or any channel other than eve's HTTP channel.
+**Status: 0.2, beta, on npm.** It was run end to end in a local eve 1.1.0 agent, and in a deployed one with a web page ([example](../../examples/thai-quotation-agent)). A real conversation on Telegram, LINE or Slack has not been tried. See [What was tested](#what-was-tested).
 
 [ภาษาไทย](#ภาษาไทย)
 

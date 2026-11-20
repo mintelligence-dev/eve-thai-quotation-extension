@@ -1,0 +1,23 @@
+name: Feature request
+description: Something the project should do. English or Thai is fine.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The situation, in your own words. Who is quoting, to whom, through which channel.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: The project's rules
+      description: A request that needs one of these changed is unlikely to be accepted; say why if yours does.
+      options:
+        - label: Prices still come only from a catalog
+        - label: A person still approves before a quotation is issued
