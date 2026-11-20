@@ -1,7 +1,7 @@
 "use client";
 
 import type { DeskDraft, DocumentDetails, ItemView, LineView, Revision } from "@eve-thai-quotation-extension/eve/desk";
-import { CheckIcon, SearchIcon, XIcon } from "lucide-react";
+import { CheckIcon, XIcon } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { Step } from "@/app/_components/step";
@@ -9,6 +9,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Combobox } from "@/components/ui/combobox";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -164,11 +166,12 @@ export function QuotationDesk({ token, initial }: { token: string; initial: Desk
               <p className="text-muted-foreground mb-1 text-xs font-medium">
                 เพิ่มรายการที่ลูกค้าไม่ได้พูดถึง (เช่น ค่าขนส่ง)
               </p>
-              <ItemSearch
+              <ItemPicker
                 token={token}
-                disabled={pending}
+                label="เพิ่มรายการ"
                 placeholder="ค้นหาเพื่อเพิ่มบรรทัด…"
-                onPick={(item) => revise({ add: [{ sku: item.sku, quantity: 1 }] })}
+                disabled={pending}
+                onPick={(sku) => revise({ add: [{ sku, quantity: 1 }] })}
               />
             </div>
             {questions.length > 0 && (
@@ -260,13 +263,17 @@ export function QuotationDesk({ token, initial }: { token: string; initial: Desk
               onCommit={(sellerName) => saveDetail({ sellerName })}
             />
             <div className="grid grid-cols-2 gap-2">
-              <TextField
-                id="quote-date"
-                label="วันที่ (เว้นว่าง = วันที่อนุมัติ)"
-                type="date"
-                value={draft.details.date}
-                onCommit={(date) => saveDetail({ date })}
-              />
+              <div className="grid gap-1">
+                <Label className="text-muted-foreground text-xs" htmlFor="quote-date">
+                  วันที่ (เว้นว่าง = วันที่อนุมัติ)
+                </Label>
+                <DatePicker
+                  id="quote-date"
+                  placeholder="วันที่อนุมัติ"
+                  value={parseIsoDate(draft.details.date)}
+                  onValueChange={(date) => saveDetail({ date: date ? toIsoDate(date) : "" })}
+                />
+              </div>
               <TextField
                 id="valid-days"
                 label="ยืนราคา (วัน)"
@@ -384,13 +391,9 @@ function LineRow({
   disabled: boolean;
   revise: (revision: Revision) => void;
 }) {
-  const [choosing, setChoosing] = useState(false);
   const change = (fields: Omit<NonNullable<Revision["changes"]>[number], "lineId">) =>
     revise({ changes: [{ lineId: line.lineId, ...fields }] });
   const needsItem = line.item === null;
-  // Closed until the person opens it, like a select; the warning colour says a choice is needed.
-  const open = choosing;
-  const others = line.candidates.filter((candidate) => candidate.sku !== line.item?.sku);
   const status = STATUS[line.status];
 
   return (
@@ -412,57 +415,16 @@ function LineRow({
         )}
       </td>
       <td className="px-3 py-3">
-        <button
-          type="button"
-          aria-expanded={open}
-          className={cn(
-            "flex h-9 w-full items-center justify-between gap-2 rounded-md border px-3 text-left text-sm",
-            needsItem ? "border-warning/60 bg-warning/5" : "bg-background",
-          )}
+        <ItemPicker
+          token={token}
+          label={`สินค้า บรรทัด ${index + 1}`}
+          placeholder="เลือกสินค้า…"
+          className={needsItem ? "border-warning/60 bg-warning/5" : "bg-background"}
           disabled={disabled}
-          onClick={() => setChoosing(!choosing)}
-        >
-          {line.item ? (
-            <span className="truncate">
-              {line.item.name} <span className="text-muted-foreground text-xs">{line.item.sku}</span>
-            </span>
-          ) : (
-            <span className="text-muted-foreground">เลือกสินค้า…</span>
-          )}
-          <span aria-hidden className="text-muted-foreground text-xs">
-            {open ? "▲" : "▼"}
-          </span>
-        </button>
-
-        {open && (
-          <div className="bg-card mt-1.5 flex flex-col gap-1 rounded-md border p-2 shadow-sm">
-            {others.length > 0 && <p className="text-muted-foreground px-1 text-xs">รายการที่ใกล้เคียง</p>}
-            {others.map((candidate) => (
-              <Button
-                key={candidate.sku}
-                className="h-auto justify-start py-1.5 text-left font-normal whitespace-normal"
-                size="sm"
-                variant="ghost"
-                disabled={disabled}
-                onClick={() => {
-                  change({ sku: candidate.sku });
-                  setChoosing(false);
-                }}
-              >
-                {candidate.name} <span className="text-muted-foreground text-xs">{candidate.sku}</span>
-              </Button>
-            ))}
-            <ItemSearch
-              token={token}
-              disabled={disabled}
-              placeholder="ค้นหาสินค้าอื่นในแคตตาล็อก…"
-              onPick={(item) => {
-                change({ sku: item.sku });
-                setChoosing(false);
-              }}
-            />
-          </div>
-        )}
+          current={line.item}
+          suggestions={line.candidates}
+          onPick={(sku) => change({ sku })}
+        />
 
         {line.problemCodes.includes("unit_mismatch") && (
           <Button className="mt-2" size="xs" variant="outline" disabled={disabled} onClick={() => change({ confirmUnit: true })}>
@@ -542,24 +504,45 @@ function QuantityInput({
   );
 }
 
-function ItemSearch({
+const itemOption = (item: ItemView) => ({
+  value: item.sku,
+  label: `${item.name} · ${item.sku} · ${item.unit}`,
+  keywords: [item.sku],
+});
+
+/**
+ * Choose a catalog item. Closed, it shows the current item; open, it lists the close matches
+ * and searches the whole catalog on the server once two characters are typed.
+ */
+function ItemPicker({
   token,
-  disabled,
+  label,
   placeholder,
+  className,
+  disabled,
+  current = null,
+  suggestions = [],
   onPick,
 }: {
   token: string;
-  disabled: boolean;
+  label: string;
   placeholder: string;
-  onPick: (item: ItemView) => void;
+  className?: string;
+  disabled: boolean;
+  current?: ItemView | null;
+  suggestions?: ItemView[];
+  onPick: (sku: string) => void;
 }) {
   const [query, setQuery] = useState("");
-  const [items, setItems] = useState<ItemView[]>();
+  const [found, setFound] = useState<{ query: string; items: ItemView[] }>();
   const [failed, setFailed] = useState<string>();
   const latest = useRef(0);
+  // Counts picks: a new key gives the combobox an empty search box the next time it opens.
+  const [picks, setPicks] = useState(0);
+  const text = query.trim();
+  const searching = text.length >= 2;
 
   useEffect(() => {
-    const text = query.trim();
     if (text.length < 2) return;
     const id = ++latest.current;
     const timer = setTimeout(async () => {
@@ -567,54 +550,51 @@ function ItemSearch({
       // A slower, older search must not replace the results of a newer one.
       if (id !== latest.current) return;
       if (result.ok) {
-        setItems(result.value);
+        setFound({ query: text, items: result.value });
         setFailed(undefined);
       } else {
         setFailed(result.error);
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [query, token]);
+  }, [text, token]);
 
-  const shown = query.trim().length < 2 ? undefined : items;
+  // The current item stays in the list so the closed field can always show its name.
+  const listed = searching ? (found?.items ?? []) : suggestions;
+  const items = current ? [current, ...listed.filter((item) => item.sku !== current.sku)] : listed;
   return (
-    <div className="flex flex-col gap-1">
-      <div className="relative">
-        <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-        <Input
-          aria-label={placeholder}
-          className="pl-8"
-          placeholder={placeholder}
-          value={query}
-          disabled={disabled}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      </div>
+    <div className="grid gap-1">
+      <Combobox
+        key={picks}
+        aria-label={label}
+        className={className}
+        disabled={disabled}
+        placeholder={placeholder}
+        searchPlaceholder="พิมพ์ชื่อหรือรหัสสินค้า…"
+        emptyText={searching ? `ไม่พบ "${text}" ในแคตตาล็อก` : "พิมพ์อย่างน้อย 2 ตัวอักษรเพื่อค้นหา"}
+        loading={searching && found?.query !== text && !failed}
+        shouldFilter={false}
+        options={items.map(itemOption)}
+        value={current?.sku ?? ""}
+        onSearchChange={setQuery}
+        onValueChange={(sku) => {
+          setQuery("");
+          setPicks((count) => count + 1);
+          // The combobox sends "" when the chosen item is clicked again; a line keeps its item.
+          if (sku && sku !== current?.sku) onPick(sku);
+        }}
+      />
       {failed && <p className="text-destructive text-xs">{failed}</p>}
-      {shown?.length === 0 && (
-        <p className="text-muted-foreground px-1 py-2 text-sm">ไม่พบ &quot;{query.trim()}&quot; ในแคตตาล็อก</p>
-      )}
-      {shown?.map((item) => (
-        <Button
-          key={item.sku}
-          className="h-auto justify-start py-1.5 text-left font-normal whitespace-normal"
-          size="sm"
-          variant="ghost"
-          disabled={disabled}
-          onClick={() => {
-            onPick(item);
-            setQuery("");
-            setItems(undefined);
-          }}
-        >
-          {item.name}{" "}
-          <span className="text-muted-foreground text-xs">
-            {item.sku} · {item.unit}
-          </span>
-        </Button>
-      ))}
     </div>
   );
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+const toIsoDate = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+/** "2026-11-20" as a local date; `new Date(text)` would read it as UTC and can shift the day. */
+function parseIsoDate(text: string): Date | undefined {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : undefined;
 }
 
 /** A field that saves when the person leaves it, and only when the text changed. */
