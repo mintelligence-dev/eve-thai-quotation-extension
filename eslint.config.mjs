@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "packages/*/dist/**",
     "packages/*/.eve/**",
+    // A project of its own, with its own dependencies and tooling.
+    "examples/**",
   ]),
 ]);
 

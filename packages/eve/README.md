@@ -96,7 +96,7 @@ quotation({
 });
 ```
 
-The page is yours to build. The `desk` export gives it the same rules the tools use, with no model involved:
+The page is yours to build; [`examples/thai-quotation-agent`](../../examples/thai-quotation-agent) is a complete one, with a Telegram channel beside it. The `desk` export gives a page the same rules the tools use, with no model involved:
 
 ```ts
 import { openDesk } from "@eve-thai-quotation-extension/eve/desk";
