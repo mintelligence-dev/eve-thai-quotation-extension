@@ -1,6 +1,6 @@
 {
   "name": "@eve-thai-quotation-extension/eve",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "eve extension: draft Thai and English quotations from a customer message, priced from your own catalog, issued only after a person approves.",
   "keywords": [
     "quotation",
@@ -34,6 +34,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.mjs"
     },
+    "./desk": {
+      "types": "./dist/extension/lib/desk.d.ts",
+      "default": "./dist/extension/lib/desk.mjs"
+    },
     "./tools": {
       "types": "./dist/tools/index.d.ts",
       "default": "./dist/tools/index.mjs"
@@ -49,13 +53,20 @@
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "@vercel/blob": "^2.9.0",
     "eve": "1.1.0",
     "typescript": "^5"
   },
   "peerDependencies": {
-    "eve": "*"
+    "eve": "*",
+    "@vercel/blob": ">=2"
   },
   "engines": {
     "node": ">=24"
+  },
+  "peerDependenciesMeta": {
+    "@vercel/blob": {
+      "optional": true
+    }
   }
 }

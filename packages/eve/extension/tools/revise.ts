@@ -1,12 +1,12 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
 
-import { reviseDraft, viewDraft } from "../lib/service";
-import { catalog, drafts, settings } from "../lib/session";
+import { reviseDraft } from "../lib/service";
+import { catalogFor, loadDrafts, saveDrafts, view } from "../lib/session";
 
 export default defineTool({
   description:
-    "Change a quotation draft after the customer answered: choose the item for a line, set a quantity, confirm a unit, remove a line, or add an item. Returns the updated draft. Only use SKUs from a line's candidates or from the search tool.",
+    "Change a quotation draft after the customer answered: choose the item for a line, set a quantity, confirm a unit, remove a line, or add an item. Returns the updated draft. Call it with only the draftId to read the draft as it is now. Only use SKUs from a line's candidates or from the search tool.",
   inputSchema: z.object({
     draftId: z.string().min(1),
     changes: z
@@ -31,9 +31,9 @@ export default defineTool({
       .describe("Items the first message did not mention, such as delivery."),
   }),
   async execute({ draftId, changes, add }, ctx) {
-    const items = await catalog(ctx.abortSignal);
-    const store = reviseDraft(drafts.get(), draftId, { changes, add }, items);
-    drafts.update(() => store);
-    return viewDraft(draftId, store.drafts[draftId], items, settings());
+    const current = await loadDrafts(draftId);
+    const items = await catalogFor(current.drafts[draftId], ctx.abortSignal);
+    const store = reviseDraft(current, draftId, { changes, add }, items);
+    return view(await saveDrafts(store, draftId), draftId, ctx.abortSignal);
   },
 });
