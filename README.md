@@ -5,6 +5,8 @@
 
 [![CI](https://github.com/mintelligence-dev/eve-thai-quotation-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/mintelligence-dev/eve-thai-quotation-extension/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![core](https://img.shields.io/npm/v/@eve-thai-quotation-extension/core?label=core)](https://www.npmjs.com/package/@eve-thai-quotation-extension/core)
+[![eve](https://img.shields.io/npm/v/@eve-thai-quotation-extension/eve?label=eve)](https://www.npmjs.com/package/@eve-thai-quotation-extension/eve)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![AI SDK](https://img.shields.io/badge/AI%20SDK-7-black?logo=vercel)](https://ai-sdk.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
