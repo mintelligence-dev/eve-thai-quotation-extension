@@ -1,4 +1,4 @@
-import { bahtText, formatAmount, formatVatRate, type PricedQuotation } from "@/lib/quotation";
+import { bahtText, formatAmount, formatVatRate, type PricedQuotation } from "@eve-thai-quotation-extension/core";
 
 export interface QuotationMeta {
   quoteNo: string;

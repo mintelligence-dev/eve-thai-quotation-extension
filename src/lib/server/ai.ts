@@ -3,8 +3,8 @@ import { z } from "zod";
 import {
   createLlmExtractor,
   createLlmSelector,
-} from "@/lib/quotation/llm";
-import { heuristicExtractor, heuristicSelector, type LineExtractor, type MatchSelector } from "@/lib/quotation";
+} from "@eve-thai-quotation-extension/core/llm";
+import { heuristicExtractor, heuristicSelector, type LineExtractor, type MatchSelector } from "@eve-thai-quotation-extension/core";
 
 /** Default Gateway model; override with QUOTATION_MODEL (any id from https://vercel.com/ai-gateway/models). */
 export const DEFAULT_MODEL = "anthropic/claude-haiku-5.5";

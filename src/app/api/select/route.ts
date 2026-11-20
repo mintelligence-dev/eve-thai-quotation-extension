@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { heuristicSelector, SELECT_LIMITS } from "@/lib/quotation";
+import { heuristicSelector, SELECT_LIMITS } from "@eve-thai-quotation-extension/core";
 import { getEngine, modeSchema, OFFLINE_FALLBACK_WARNING, readJson } from "@/lib/server/ai";
 
 const bodySchema = z.object({

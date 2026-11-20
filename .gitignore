@@ -44,3 +44,7 @@ next-env.d.ts
 
 # local design-hook state
 /.impeccable
+
+# workspace packages
+/packages/*/dist/
+/packages/*/node_modules/

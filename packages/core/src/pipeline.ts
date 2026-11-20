@@ -1,6 +1,6 @@
-import { extractRequestedLinesHeuristic } from "./extract";
-import { findCandidates } from "./retrieve";
-import { sameUnit } from "./text";
+import { extractRequestedLinesHeuristic } from "./extract.js";
+import { findCandidates } from "./retrieve.js";
+import { sameUnit } from "./text.js";
 import type {
   CandidateView,
   CatalogItem,
@@ -10,7 +10,7 @@ import type {
   QuotationDraft,
   RequestedLine,
   Selection,
-} from "./types";
+} from "./types.js";
 
 /** Turns a free-text inquiry into requested lines. */
 export interface LineExtractor {

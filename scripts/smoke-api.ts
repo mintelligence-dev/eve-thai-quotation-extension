@@ -2,7 +2,7 @@
 // Usage: BASE_URL=http://localhost:3000 [SAMPLE=02-mixed-electrical.txt] npx tsx scripts/smoke-api.ts
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { assembleDraft, parseCatalogCsv, shortlist, type RequestedLine, type Selection } from "../src/lib/quotation";
+import { assembleDraft, parseCatalogCsv, shortlist, type RequestedLine, type Selection } from "@eve-thai-quotation-extension/core";
 
 const base = process.env.BASE_URL ?? "http://localhost:3000";
 const samples = join(__dirname, "..", "public", "samples");
