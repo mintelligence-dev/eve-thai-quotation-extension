@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_Thai, Sarabun } from "next/font/google";
+import { IBM_Plex_Sans_Thai, Manrope, Rubik, Sarabun } from "next/font/google";
 import "./globals.css";
 
-const uiFont = IBM_Plex_Sans_Thai({
-  variable: "--font-plex",
+// Variable names the Mintel UI theme looks for.
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
+const rubik = Rubik({ subsets: ["latin"], variable: "--font-rubik" });
+const plexThai = IBM_Plex_Sans_Thai({
+  variable: "--font-plex-thai",
   subsets: ["thai", "latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -22,7 +25,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="th" className={`${uiFont.variable} ${docFont.variable} h-full antialiased`}>
+    <html
+      lang="th"
+      suppressHydrationWarning
+      className={`${manrope.variable} ${rubik.variable} ${plexThai.variable} ${docFont.variable} h-full antialiased`}
+    >
       <body className="min-h-full">{children}</body>
     </html>
   );
