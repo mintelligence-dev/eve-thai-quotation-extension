@@ -37,6 +37,8 @@ export interface StoredDraft {
   token?: string;
   /** The customer's message the draft was made from. */
   inquiry?: string;
+  /** An uploaded catalog this draft is priced from, instead of the configured one. */
+  catalogId?: string;
   customerName?: string;
   notes?: string;
   /** The issued quotation, kept so a shared draft can show and export it later. */

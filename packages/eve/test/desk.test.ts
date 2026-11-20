@@ -67,6 +67,46 @@ describe("shared storage", () => {
   });
 });
 
+describe("uploaded catalogs", () => {
+  const office = readFileSync(join(SAMPLES, "catalog-office-en.csv"), "utf8");
+  const open = (allow: boolean) => openDesk({ catalog: { csv }, storage: { dir }, allowUploadedCatalogs: allow });
+
+  it("are refused unless turned on", async () => {
+    await expect(open(false).uploadCatalog(office)).rejects.toThrow(/turned off/);
+  });
+
+  it("refuses a catalog with errors and keeps nothing", async () => {
+    await expect(open(true).uploadCatalog("sku,name\nA1,Thing\n")).rejects.toThrow(/was not loaded/);
+    expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it("prices a draft from the uploaded catalog, not the configured one", async () => {
+    const d = open(true);
+    const { catalogId, items } = await d.uploadCatalog(office);
+    expect(items).toBeGreaterThan(0);
+    expect((await d.uploadCatalog(office)).catalogId).toBe(catalogId);
+
+    const first = (await d.search(await d.create({ inquiry: "x", catalogId }), "paper"))[0];
+    expect(first).toBeDefined();
+    const token = await d.create({ inquiry: `${first.name} 3 ${first.unit}`, catalogId });
+    const draft = await d.read(token);
+    expect(draft.usesUploadedCatalog).toBe(true);
+    expect(draft.view.lines[0]?.item?.sku).toBe(first.sku);
+
+    // The configured (construction) catalog does not have this item.
+    const plain = await d.read(await d.create({ inquiry: `${first.name} 3 ${first.unit}` }));
+    expect(plain.usesUploadedCatalog).toBe(false);
+    expect(plain.view.lines[0]?.item?.sku).not.toBe(first.sku);
+  });
+
+  it("stops serving a draft's uploaded catalog once the option is turned off", async () => {
+    const d = open(true);
+    const { catalogId } = await d.uploadCatalog(office);
+    const token = await d.create({ inquiry: "paper 3", catalogId });
+    await expect(open(false).read(token)).rejects.toThrow(/turned off/);
+  });
+});
+
 describe("desk", () => {
   it("refuses a token it does not know", async () => {
     await expect(desk().read(newToken())).rejects.toBeInstanceOf(DraftNotFoundError);
@@ -80,7 +120,7 @@ describe("desk", () => {
     const unclear = first.view.lines.find((l) => l.problems.length > 0);
     expect(unclear, JSON.stringify(first.view.lines)).toBeDefined();
 
-    const found = await d.search("ท่อ pvc 1 นิ้ว");
+    const found = await d.search(token, "ท่อ pvc 1 นิ้ว");
     const settled = await d.revise(token, { changes: [{ lineId: unclear!.lineId, sku: found[0].sku, quantity: 5 }] });
     expect(settled.view.readyToIssue).toBe(true);
 

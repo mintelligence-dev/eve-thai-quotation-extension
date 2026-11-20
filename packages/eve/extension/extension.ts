@@ -43,6 +43,12 @@ export default defineExtension({
         baseUrl: z.string().url(),
         /** How many days a draft's link works, counted from when the draft was made. */
         expiresDays: z.number().int().min(1).max(365).default(30),
+        /**
+         * Let a draft be priced from a catalog uploaded through the desk instead of `catalog`.
+         * With this on, whoever can upload a catalog chooses the prices: keep it off unless
+         * the page that uploads is only for people you trust with that.
+         */
+        allowUploadedCatalogs: z.boolean().default(false),
       })
       .optional(),
   }),

@@ -10,6 +10,8 @@ import type { QuotationSettings } from "@eve-thai-quotation-extension/core";
 
 import { loadCatalog, type CatalogSource } from "./catalog";
 import {
+  createDraft,
+  emptyStore,
   issueQuotation,
   reviseDraft,
   searchCatalog,
@@ -20,7 +22,7 @@ import {
   type ItemView,
   type Revision,
 } from "./service";
-import { openStorage, toShared, type DraftStorageConfig, type SharedDraft } from "./shared";
+import { newToken, openStorage, toShared, type DraftStorageConfig, type SharedDraft } from "./shared";
 
 export interface DeskOptions {
   /** The same catalog the agent's extension uses. */
@@ -33,6 +35,11 @@ export interface DeskOptions {
   sellerName?: string;
   refreshSeconds?: number;
   expiresDays?: number;
+  /**
+   * Let the page upload a catalog and price a draft from it instead of the configured one.
+   * Off by default: with it on, whoever can reach the page chooses the prices.
+   */
+  allowUploadedCatalogs?: boolean;
 }
 
 export interface DeskDraft {
@@ -43,6 +50,8 @@ export interface DeskDraft {
   /** Present once the draft has been issued. */
   issued: IssuedQuotation | null;
   expiresAt: string;
+  /** true when the draft is priced from an uploaded catalog, not the configured one. */
+  usesUploadedCatalog: boolean;
 }
 
 export class DraftNotFoundError extends Error {
@@ -61,7 +70,15 @@ export function openDesk(options: DeskOptions) {
     pricesIncludeVat: options.pricesIncludeVat ?? false,
   };
   const expiresDays = options.expiresDays ?? 30;
-  const catalog = () => loadCatalog(options.catalog, { refreshSeconds: options.refreshSeconds ?? 300 });
+  const configured = () => loadCatalog(options.catalog, { refreshSeconds: options.refreshSeconds ?? 300 });
+  const uploaded = async (catalogId: string) => {
+    if (!options.allowUploadedCatalogs) throw new Error("Uploaded catalogs are turned off.");
+    const csv = await storage.getCatalog(catalogId);
+    if (csv === null) throw new Error("The uploaded catalog is no longer available. Upload it again.");
+    return loadCatalog({ csv });
+  };
+  /** The catalog a draft is priced from. */
+  const catalogOf = (record: { catalogId?: string }) => (record.catalogId ? uploaded(record.catalogId) : configured());
 
   const open = async (token: string): Promise<SharedDraft> => {
     const record = await storage.get(token);
@@ -70,12 +87,13 @@ export function openDesk(options: DeskOptions) {
   };
   const asStore = (record: SharedDraft): DraftStore => ({ drafts: { [ID]: record }, next: 0 });
   const present = async (record: SharedDraft): Promise<DeskDraft> => ({
-    view: viewDraft(ID, record, await catalog(), settings),
+    view: viewDraft(ID, record, await catalogOf(record), settings),
     inquiry: record.inquiry ?? "",
     customerName: record.customerName ?? "",
     notes: record.notes ?? "",
     issued: record.issued ?? null,
     expiresAt: record.expiresAt,
+    usesUploadedCatalog: Boolean(record.catalogId),
   });
   const save = async (token: string, store: DraftStore): Promise<DeskDraft> => {
     const record = toShared(store.drafts[ID], token, expiresDays);
@@ -90,7 +108,7 @@ export function openDesk(options: DeskOptions) {
 
     async revise(token: string, revision: Revision): Promise<DeskDraft> {
       const record = await open(token);
-      return save(token, reviseDraft(asStore(record), ID, revision, await catalog()));
+      return save(token, reviseDraft(asStore(record), ID, revision, await catalogOf(record)));
     },
 
     /** Customer name and notes are kept with the draft and printed on the quotation. */
@@ -104,8 +122,31 @@ export function openDesk(options: DeskOptions) {
       return save(token, asStore(next));
     },
 
-    async search(query: string): Promise<ItemView[]> {
-      return searchCatalog(query, await catalog());
+    /** Searches the catalog the draft is priced from. */
+    async search(token: string, query: string): Promise<ItemView[]> {
+      return searchCatalog(query, await catalogOf(await open(token)));
+    },
+
+    /**
+     * Checks an uploaded catalog and keeps it. A catalog with errors is refused, with the first
+     * errors in the message. Needs `allowUploadedCatalogs`.
+     */
+    async uploadCatalog(csv: string): Promise<{ catalogId: string; items: number }> {
+      if (!options.allowUploadedCatalogs) throw new Error("Uploaded catalogs are turned off.");
+      const items = await loadCatalog({ csv });
+      return { catalogId: await storage.putCatalog(csv), items: items.length };
+    },
+
+    /**
+     * Starts a draft from a customer message with the built-in reading, without an agent.
+     * Returns the draft's token. Give `catalogId` to price it from an uploaded catalog.
+     */
+    async create(input: { inquiry: string; catalogId?: string }): Promise<string> {
+      const items = await catalogOf(input);
+      const { store, draftId } = await createDraft(emptyStore(), { inquiry: input.inquiry }, items);
+      const record = toShared({ ...store.drafts[draftId], catalogId: input.catalogId }, newToken(), expiresDays);
+      await storage.put(record);
+      return record.token;
     },
 
     /**
@@ -115,7 +156,7 @@ export function openDesk(options: DeskOptions) {
      */
     async issue(token: string, input: { grandTotal: string; customerName?: string; notes?: string }): Promise<DeskDraft> {
       const record = await open(token);
-      const { store } = issueQuotation(asStore(record), { draftId: ID, ...input }, await catalog(), settings, {
+      const { store } = issueQuotation(asStore(record), { draftId: ID, ...input }, await catalogOf(record), settings, {
         validDays: options.validDays ?? 30,
         sellerName: options.sellerName ?? "",
       });

@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import extension from "../extension";
 import { issueQuotation } from "../lib/service";
-import { catalog, loadDrafts, saveDrafts, settings } from "../lib/session";
+import { catalogFor, loadDrafts, saveDrafts, settings } from "../lib/session";
 
 export default defineTool({
   description:
@@ -35,8 +35,9 @@ export default defineTool({
     },
   },
   async execute(input, ctx) {
-    const items = await catalog(ctx.abortSignal);
-    const { store, issued } = issueQuotation(await loadDrafts(input.draftId), input, items, settings(), {
+    const current = await loadDrafts(input.draftId);
+    const items = await catalogFor(current.drafts[input.draftId], ctx.abortSignal);
+    const { store, issued } = issueQuotation(current, input, items, settings(), {
       validDays: extension.config.validDays,
       sellerName: extension.config.sellerName,
     });

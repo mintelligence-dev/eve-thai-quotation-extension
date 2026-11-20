@@ -2,7 +2,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 
 import { reviseDraft } from "../lib/service";
-import { catalog, loadDrafts, saveDrafts, view } from "../lib/session";
+import { catalogFor, loadDrafts, saveDrafts, view } from "../lib/session";
 
 export default defineTool({
   description:
@@ -31,8 +31,9 @@ export default defineTool({
       .describe("Items the first message did not mention, such as delivery."),
   }),
   async execute({ draftId, changes, add }, ctx) {
-    const items = await catalog(ctx.abortSignal);
-    const store = reviseDraft(await loadDrafts(draftId), draftId, { changes, add }, items);
+    const current = await loadDrafts(draftId);
+    const items = await catalogFor(current.drafts[draftId], ctx.abortSignal);
+    const store = reviseDraft(current, draftId, { changes, add }, items);
     return view(await saveDrafts(store, draftId), draftId, ctx.abortSignal);
   },
 });

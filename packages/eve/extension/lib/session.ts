@@ -2,7 +2,7 @@ import { defineState } from "eve/context";
 
 import extension from "../extension";
 import { loadCatalog } from "./catalog";
-import { emptyStore, viewDraft, type DraftStore, type DraftView } from "./service";
+import { emptyStore, viewDraft, type DraftStore, type DraftView, type StoredDraft } from "./service";
 import { draftUrl, newToken, openStorage, toShared } from "./shared";
 
 /**
@@ -19,6 +19,19 @@ export const settings = () => ({
 
 export const catalog = (signal?: AbortSignal) =>
   loadCatalog(extension.config.catalog, { refreshSeconds: extension.config.refreshSeconds, signal });
+
+/** An uploaded catalog, when the configuration allows drafts to be priced from one. */
+export async function uploadedCatalog(catalogId: string) {
+  const share = extension.config.sharing;
+  if (!share?.allowUploadedCatalogs) throw new Error("Uploaded catalogs are turned off for this agent.");
+  const csv = await openStorage(share.storage).getCatalog(catalogId);
+  if (csv === null) throw new Error(`There is no uploaded catalog ${catalogId}. Use the configured catalog, or ask for the upload again.`);
+  return loadCatalog({ csv });
+}
+
+/** The catalog a draft is priced from: its uploaded one when it has one, else the configured one. */
+export const catalogFor = (stored: StoredDraft | undefined, signal?: AbortSignal) =>
+  stored?.catalogId ? uploadedCatalog(stored.catalogId) : catalog(signal);
 
 const sharing = () => extension.config.sharing;
 
@@ -49,7 +62,7 @@ export async function saveDrafts(store: DraftStore, draftId: string): Promise<Dr
 
 export async function view(store: DraftStore, draftId: string, signal?: AbortSignal): Promise<DraftView> {
   const stored = store.drafts[draftId];
-  const result = viewDraft(draftId, stored, await catalog(signal), settings());
+  const result = viewDraft(draftId, stored, await catalogFor(stored, signal), settings());
   const share = sharing();
   return share && stored.token ? { ...result, editUrl: draftUrl(share.baseUrl, stored.token) } : result;
 }

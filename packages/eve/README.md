@@ -105,7 +105,7 @@ const desk = openDesk({ catalog, storage: { dir: ".data/drafts" }, sellerName: "
 
 await desk.read(token);                                   // the draft, as the tools show it
 await desk.revise(token, { changes: [{ lineId, sku }] }); // same changes as the revise tool
-await desk.search("ท่อ pvc");
+await desk.search(token, "ท่อ pvc");                      // the draft's own catalog
 await desk.setDetails(token, { customerName, notes });
 await desk.issue(token, { grandTotal });                  // refuses if the total changed
 ```
@@ -115,6 +115,7 @@ Read this before you use it:
 - **The link is the key.** Anyone who holds a draft's link can read it, and anyone who can reach your page's `issue` call can issue it. Calling `desk.issue` is the approval; the `approval` setting only covers the agent's `issue` tool. Put your own sign-in in front of the page when the link may travel beyond the people allowed to approve.
 - **`dir` storage is one machine.** It suits local use and a server with a disk. On serverless hosting the folder is not shared between requests; a storage option for that does not exist yet.
 - **Last write wins.** Two people changing the same draft at the same moment can overwrite each other.
+- **Uploaded catalogs are off by default.** With `allowUploadedCatalogs: true` (in `sharing` and in `openDesk`), `desk.uploadCatalog(csv)` keeps a price list and returns a `catalogId`; `desk.create({ inquiry, catalogId })` or the `draft` tool's `catalogId` then prices a draft from it instead of your `catalog`. Whoever can upload then chooses the prices, so turn it on only for a demo or a page that only trusted staff reach.
 - Tokens are 128 random bits. A draft stops opening `expiresDays` after it was made.
 
 ## What was tested
@@ -127,7 +128,7 @@ In a local `eve dev` agent on eve 1.1.0 with `anthropic/claude-haiku-5.5`, over 
 
 The rules behind the tools have unit tests (`packages/eve/test`).
 
-Shared drafts and the `desk` export (0.2.0) were run locally with a Next.js page beside the agent: paste a message, change lines in a table, approve, print. Issuing from chat after a change on the page was not tried, and neither was any of this on a deployed agent.
+Shared drafts and the `desk` export (0.2.0) were run locally with a Next.js page beside the agent: paste a message, change lines in a table, approve, see the printable quotation; and the same with an uploaded catalog. Issuing from chat after a change on the page was not tried, and neither was any of this on a deployed agent.
 
 `eve add` was run against the published 0.1.0 packages in a fresh `eve init` agent: it installed the package, wrote the two files, and the agent drafted and, after approval, issued a quotation.
 
