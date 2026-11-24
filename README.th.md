@@ -12,13 +12,17 @@
 
 [![ร่างใบเสนอราคาที่สร้างจากข้อความลูกค้า พร้อมให้คนตรวจและอนุมัติ](docs/screenshot.png)](https://thai-quotation-agent.vercel.app)
 
+**[ลองใช้ →](https://thai-quotation-agent.vercel.app)** หรือ deploy agent ตัวอย่างเป็นของคุณเอง ปุ่มจะให้กรอกรหัสผ่านหน้าแคตตาล็อกและ key ของ AI ที่ตั้งงบไว้ แล้วสร้างที่เก็บข้อมูลให้ ([ค่าแต่ละตัวทำอะไร](examples/thai-quotation-agent#deploy-to-vercel))
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent&project-name=thai-quotation-agent&repository-name=thai-quotation-agent&env=QUOTATION_ADMIN_PASSWORD%2CAI_GATEWAY_API_KEY&envDescription=QUOTATION_ADMIN_PASSWORD%3A%20the%20password%20for%20the%20%2Fcatalog%20page%2C%20where%20prices%20are%20changed.%20AI_GATEWAY_API_KEY%3A%20an%20AI%20Gateway%20key%20with%20a%20spending%20limit%2C%20because%20anyone%20who%20can%20open%20the%20page%20can%20use%20AI%20mode.&envLink=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent%23environment-variables&stores=%5B%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22private%22%7D%5D)
+
 ## ใน repository นี้มีอะไร
 
 | | คืออะไร | ใช้ได้ที่ไหน | ลองใช้ |
 |---|---|---|---|
 | [`packages/eve`](packages/eve) | extension สำหรับ agent ที่สร้างด้วย [eve](https://eve.dev): เครื่องมือร่าง ค้นหา แก้ไข และออกใบเสนอราคา โดยต้องอนุมัติก่อนออก | ทุกช่องทางที่ agent ของคุณมี เช่น Telegram, Slack, แชตบนเว็บ | `eve add` (ดู[เริ่มใช้งาน](#เริ่มใช้งาน)) |
 | [`packages/core`](packages/core) | ตัวกฎล้วน ๆ: นำเข้าแคตตาล็อก จับคู่สินค้าไทยและอังกฤษ ตรวจร่าง คิดราคา ไม่ผูกกับ framework ใด | โปรเจกต์ TypeScript ใดก็ได้ | `npm install @eve-thai-quotation-extension/core` |
-| [`examples/thai-quotation-agent`](examples/thai-quotation-agent) | agent ตัวอย่างที่ใช้ extension ครบชุด: หน้าเว็บกับ bot Telegram ทำงานกับร่างและแคตตาล็อกชุดเดียวกัน | เว็บและ Telegram | [thai-quotation-agent.vercel.app](https://thai-quotation-agent.vercel.app) |
+| [`examples/thai-quotation-agent`](examples/thai-quotation-agent) | agent ตัวอย่างที่ใช้ extension ครบชุด: หน้าเว็บกับ bot Telegram ทำงานกับร่างและแคตตาล็อกชุดเดียวกัน | เว็บและ Telegram | [thai-quotation-agent.vercel.app](https://thai-quotation-agent.vercel.app) · [deploy ของคุณเอง](examples/thai-quotation-agent#deploy-to-vercel) |
 ทั้งสามส่วนคิดราคาด้วยโค้ดชุดเดียวกันใน `packages/core`
 
 ## ทำงานอย่างไร
