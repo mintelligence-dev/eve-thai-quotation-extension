@@ -12,13 +12,17 @@ Turn a customer's message, in Thai or English, into a quotation priced from your
 
 [![A draft quotation made from a customer's message, ready for a person to check and approve](docs/screenshot.png)](https://thai-quotation-agent.vercel.app)
 
+**[Try it →](https://thai-quotation-agent.vercel.app)** or deploy your own copy of the example agent. The button asks for a catalog password and a capped AI key, and creates the storage ([what each setting does](examples/thai-quotation-agent#deploy-to-vercel)):
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent&project-name=thai-quotation-agent&repository-name=thai-quotation-agent&env=QUOTATION_ADMIN_PASSWORD%2CAI_GATEWAY_API_KEY&envDescription=QUOTATION_ADMIN_PASSWORD%3A%20the%20password%20for%20the%20%2Fcatalog%20page%2C%20where%20prices%20are%20changed.%20AI_GATEWAY_API_KEY%3A%20an%20AI%20Gateway%20key%20with%20a%20spending%20limit%2C%20because%20anyone%20who%20can%20open%20the%20page%20can%20use%20AI%20mode.&envLink=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent%23environment-variables&stores=%5B%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22private%22%7D%5D)
+
 ## What is in this repository
 
 | | What it is | Where it runs | Try it |
 |---|---|---|---|
 | [`packages/eve`](packages/eve) | An extension for [eve](https://eve.dev) agents: tools to draft, search, revise and issue a quotation, with approval before issuing | Any channel your eve agent has: Telegram, Slack, web chat and others | `eve add` (see [Quick start](#quick-start)) |
 | [`packages/core`](packages/core) | The rules on their own: catalog import, Thai and English matching, review checks, pricing. No framework, no runtime dependencies | Any TypeScript project | `npm install @eve-thai-quotation-extension/core` |
-| [`examples/thai-quotation-agent`](examples/thai-quotation-agent) | A complete agent built with the extension: a web page and a Telegram bot working on the same drafts and the same catalog | Web and Telegram | [thai-quotation-agent.vercel.app](https://thai-quotation-agent.vercel.app) |
+| [`examples/thai-quotation-agent`](examples/thai-quotation-agent) | A complete agent built with the extension: a web page and a Telegram bot working on the same drafts and the same catalog | Web and Telegram | [thai-quotation-agent.vercel.app](https://thai-quotation-agent.vercel.app) · [deploy your own](examples/thai-quotation-agent#deploy-to-vercel) |
 All three price with the same code in `packages/core`.
 
 ## How it works
