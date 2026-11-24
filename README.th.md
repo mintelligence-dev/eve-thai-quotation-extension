@@ -77,6 +77,10 @@ if (canApprove(draft, catalog).ok) {
 
 [agent ตัวอย่าง](examples/thai-quotation-agent) มีหน้าเว็บและ bot Telegram README ของตัวอย่างอธิบายวิธีรันในเครื่อง วิธี deploy ขึ้น Vercel และใครทำอะไรได้บ้างบนระบบที่ deploy แล้ว
 
+deploy ขึ้น Vercel ของคุณเองได้ด้วยปุ่มเดียว ปุ่มจะให้กรอกรหัสผ่านหน้าแคตตาล็อกและ key ของ AI ที่ตั้งงบไว้ แล้วสร้าง Blob store แบบ private ให้ ตัวแปรทุกตัวอธิบายไว้[ใน README ของตัวอย่าง](examples/thai-quotation-agent#deploy-to-vercel)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent&project-name=thai-quotation-agent&repository-name=thai-quotation-agent&env=QUOTATION_ADMIN_PASSWORD%2CAI_GATEWAY_API_KEY&envDescription=QUOTATION_ADMIN_PASSWORD%3A%20the%20password%20for%20the%20%2Fcatalog%20page%2C%20where%20prices%20are%20changed.%20AI_GATEWAY_API_KEY%3A%20an%20AI%20Gateway%20key%20with%20a%20spending%20limit%2C%20because%20anyone%20who%20can%20open%20the%20page%20can%20use%20AI%20mode.&envLink=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent%23environment-variables&stores=%5B%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22private%22%7D%5D)
+
 ## รูปแบบแคตตาล็อก
 
 | คอลัมน์ | จำเป็น | ตัวอย่าง |

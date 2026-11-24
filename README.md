@@ -77,6 +77,10 @@ Without a model, `buildDraft` reads the message with built-in rules. To use a mo
 
 The [example agent](examples/thai-quotation-agent) has a web page and a Telegram bot. Its README covers running it locally, deploying it to Vercel, and who can do what on a deployment.
 
+Deploy your own copy to Vercel. The button asks for the catalog password and a capped AI key, and creates the private Blob store; every variable is explained [in the example's README](examples/thai-quotation-agent#deploy-to-vercel):
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent&project-name=thai-quotation-agent&repository-name=thai-quotation-agent&env=QUOTATION_ADMIN_PASSWORD%2CAI_GATEWAY_API_KEY&envDescription=QUOTATION_ADMIN_PASSWORD%3A%20the%20password%20for%20the%20%2Fcatalog%20page%2C%20where%20prices%20are%20changed.%20AI_GATEWAY_API_KEY%3A%20an%20AI%20Gateway%20key%20with%20a%20spending%20limit%2C%20because%20anyone%20who%20can%20open%20the%20page%20can%20use%20AI%20mode.&envLink=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent%23environment-variables&stores=%5B%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22private%22%7D%5D)
+
 ## Catalog format
 
 | Column | Required | Example |
