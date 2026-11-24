@@ -50,23 +50,43 @@ Stopping `vercel dev` can leave its child processes running and still serving ol
 
 ## Deploy to Vercel
 
-```bash
-npx eve link --project <name> --team <team>
-npx vercel@latest blob create-store <store-name> --access private --yes
-npx eve deploy --yes
-```
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent&project-name=thai-quotation-agent&repository-name=thai-quotation-agent&env=QUOTATION_ADMIN_PASSWORD%2CAI_GATEWAY_API_KEY&envDescription=QUOTATION_ADMIN_PASSWORD%3A%20the%20password%20for%20the%20%2Fcatalog%20page%2C%20where%20prices%20are%20changed.%20AI_GATEWAY_API_KEY%3A%20an%20AI%20Gateway%20key%20with%20a%20spending%20limit%2C%20because%20anyone%20who%20can%20open%20the%20page%20can%20use%20AI%20mode.&envLink=https%3A%2F%2Fgithub.com%2Fmintelligence-dev%2Feve-thai-quotation-extension%2Ftree%2Fmain%2Fexamples%2Fthai-quotation-agent%23environment-variables&stores=%5B%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22private%22%7D%5D)
 
-Then set these for Production (`vercel env add <NAME> production`) and deploy again:
+The button copies this folder into a new repository in your GitHub account and creates a Vercel project from it. On the way it:
 
-| Variable | Needed | What it is |
-|---|---|---|
-| `BLOB_READ_WRITE_TOKEN` | yes | Added by `blob create-store`. Without it, drafts would be written to a folder that does not persist on Vercel. |
-| `QUOTATION_ADMIN_PASSWORD` | for `/catalog` | The password for the catalog page. Without it the page stays locked in production. |
-| `TELEGRAM_BOT_TOKEN` | for Telegram | From [@BotFather](https://t.me/BotFather). |
-| `TELEGRAM_WEBHOOK_SECRET_TOKEN` | for Telegram | Any long random string. Requests without it are refused. |
-| `QUOTATION_ADMIN_TELEGRAM_IDS` | for catalog changes in Telegram | Comma-separated Telegram user ids. Nobody can change prices in Telegram until this is set. |
-| `AI_GATEWAY_API_KEY` | recommended | An AI Gateway key with a spending cap. Without it the deployment uses the project's own AI Gateway access, with no cap. |
-| `QUOTATION_WEB_URL` | only with a custom domain | The address draft links are built from. Defaults to the project's production URL. |
+1. **asks for two values**, `QUOTATION_ADMIN_PASSWORD` and `AI_GATEWAY_API_KEY` (see [Environment variables](#environment-variables));
+2. **creates a private Blob store** and connects it, which sets `BLOB_READ_WRITE_TOKEN`. Drafts and the shop's catalog are kept there;
+3. **builds and deploys** the web page and the agent together in one project (`vercel.ts`).
+
+Telegram is optional and added afterwards (see [Telegram](#telegram)).
+
+ปุ่มนี้คัดลอกโฟลเดอร์นี้ไปเป็น repo ใหม่ใน GitHub ของคุณ สร้างโปรเจกต์บน Vercel ให้กรอกรหัสผ่านหน้าแคตตาล็อกและ key ของ AI Gateway สร้าง Blob store แบบ private สำหรับเก็บร่างใบเสนอราคาและแคตตาล็อก แล้ว deploy หน้าเว็บกับ agent พร้อมกัน ส่วน Telegram เพิ่มทีหลังได้
+
+### Environment variables
+
+| Variable | Needed | What it does | Where it comes from |
+|---|---|---|---|
+| `QUOTATION_ADMIN_PASSWORD` | yes | The password for `/catalog`, where the shop's prices are replaced or edited. Without it the page stays locked in production. | Any password you choose. You type it into the button's form. |
+| `AI_GATEWAY_API_KEY` | yes, with the button | The model key for "AI" mode. **Anyone who can open the page can use AI mode**, so give this key a spending limit. Without a key the deployment would use the project's own AI Gateway access, with no limit of its own. | [vercel.com/ai-gateway](https://vercel.com/ai-gateway): create a key and set a budget. |
+| `BLOB_READ_WRITE_TOKEN` | yes | The private Blob store for drafts and the catalog. Without it, drafts would be written to a folder that does not persist on Vercel. | Set by the Blob store the button creates. |
+| `TELEGRAM_BOT_TOKEN` | for Telegram | The bot's token. | [@BotFather](https://t.me/BotFather). |
+| `TELEGRAM_WEBHOOK_SECRET_TOKEN` | for Telegram | Any long random string. Requests from Telegram without it are refused. | `openssl rand -hex 32` |
+| `QUOTATION_ADMIN_TELEGRAM_IDS` | for catalog changes in Telegram | Comma-separated Telegram user ids allowed to change prices from the bot. Nobody can until this is set. | Send `/myid` to the bot. |
+| `QUOTATION_WEB_URL` | only with a custom domain | The address draft links are built from. | Defaults to the project's production URL. |
+
+| ตัวแปร | ทำอะไร |
+|---|---|
+| `QUOTATION_ADMIN_PASSWORD` | รหัสผ่านหน้า `/catalog` ที่ใช้แก้ราคาสินค้าของร้าน ถ้าไม่ตั้ง หน้านี้จะล็อกไว้บน production |
+| `AI_GATEWAY_API_KEY` | key ของโมเดลสำหรับโหมด "ใช้ AI" **ใครเปิดหน้าเว็บได้ก็ใช้โหมดนี้ได้** จึงควรตั้งงบของ key ไว้ |
+| `BLOB_READ_WRITE_TOKEN` | ที่เก็บร่างใบเสนอราคาและแคตตาล็อก แบบ private ปุ่มสร้างให้ |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_SECRET_TOKEN` / `QUOTATION_ADMIN_TELEGRAM_IDS` | เฉพาะเมื่อใช้ Telegram: token ของ bot, รหัสลับของ webhook และรายชื่อคนที่แก้ราคาผ่าน bot ได้ |
+| `QUOTATION_WEB_URL` | ใช้เมื่อมีโดเมนของตัวเอง เป็นที่อยู่ที่ใช้สร้างลิงก์ร่างใบเสนอราคา |
+
+To change a value later: `vercel env add <NAME> production`, then redeploy.
+
+### Telegram
+
+Set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET_TOKEN` and, if admins change prices from the bot, `QUOTATION_ADMIN_TELEGRAM_IDS`, then redeploy. Change `BOT_USERNAME` in `agent/channels/telegram.ts` to your bot's username, so the bot answers in groups when it is mentioned.
 
 Register the Telegram webhook once:
 
@@ -77,6 +97,16 @@ curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook" \
 ```
 
 The starting catalog is `data/starter-catalog.ts` (the same items as `data/catalog.csv`). After deploying, replace it on `/catalog` or by sending a CSV to the bot; you do not need to redeploy to change prices.
+
+### Deploy from the command line instead
+
+```bash
+npx eve link --project <name> --team <team>
+npx vercel@latest blob create-store <store-name> --access private --yes
+npx vercel env add QUOTATION_ADMIN_PASSWORD production
+npx vercel env add AI_GATEWAY_API_KEY production
+npx eve deploy --yes
+```
 
 ## Who can do what
 
