@@ -17,7 +17,7 @@
     "try-samples": "npm run build:core && tsx scripts/try-samples.ts"
   },
   "devDependencies": {
-    "@eslint/js": "^9",
+    "@eslint/js": "^10",
     "@types/node": "^24.19.2",
     "ai": "^7.0.148",
     "eslint": "^9",
