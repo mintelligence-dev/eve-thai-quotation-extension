@@ -51,7 +51,7 @@
     "react": "^19.2.6",
     "react-day-picker": "^10.0.2",
     "react-dom": "^19.2.6",
-    "shiki": "^3.23.0",
+    "shiki": "^4.6.0",
     "streamdown": "^2.5.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.0",
