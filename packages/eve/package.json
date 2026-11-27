@@ -55,7 +55,7 @@
     "@types/node": "^24.19.2",
     "@vercel/blob": "^2.9.0",
     "eve": "1.1.0",
-    "typescript": "^5"
+    "typescript": "^7"
   },
   "peerDependencies": {
     "eve": "*",

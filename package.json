@@ -22,7 +22,7 @@
     "ai": "^7.0.148",
     "eslint": "^9",
     "tsx": "^4",
-    "typescript": "^5",
+    "typescript": "^7",
     "typescript-eslint": "^8",
     "vitest": "^5.0.5",
     "zod": "^4.6.7"
