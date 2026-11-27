@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    groups:
+      actions: { patterns: ['*'] }
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      # Minor and patch bumps arrive as one pull request; a major gets its own.
+      dependencies: { patterns: ['*'], update-types: [minor, patch] }
+  # The example agent is its own npm project with its own lockfile.
+  - package-ecosystem: npm
+    directory: /examples/thai-quotation-agent
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      example: { patterns: ['*'], update-types: [minor, patch] }
